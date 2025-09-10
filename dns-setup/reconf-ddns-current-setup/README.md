@@ -1,4 +1,4 @@
-![HCInfoTech Banner](../../common/images/DDNS-GitHub Banner.png)
+![HCInfoTech Banner](../../common/images/DDNS-GitHub-Banner.png)
 
 # Network Reconfiguration: Dynamic DNS and TSIG
 
@@ -233,3 +233,98 @@ nsupdate -y $HMAC ~/example.com.zone.transfer
 This updates all of the records of the file into the new zone. It creates a journal file
 example.com.zone.jnl in /var/lib/bind and it notifies all the secondary name servers of
 the changed zone.
+
+Entries in this zone should only be maintained using ndupdate, as manually changing the zone
+file will cause conflicts and inconsistancies.
+
+## 8. Dynamic Updates with nsupdate
+
+### Add a Record
+
+update.txt:
+
+```bash
+server ns1.example.com
+zone example.com
+update add test.example.com. 3600 IN AAAA 2001:db8::1234
+send
+```
+
+Execute:
+
+```bash
+nsupdate -y $HMAC update.txt
+```
+
+### Delete a record
+
+update.txt:
+
+```bash
+server ns1.example.com
+zone example.com
+update delete test.example.com. IN AAAA
+send
+```
+
+Execute:
+
+```bash
+nsupdate -y $HMAC update.txt
+```
+
+Verify:
+
+```bash
+dig @ns1.example.com test.example.com AAAA
+```
+
+---
+
+## 9. Implement a Temporary API based on dnspython to update DNS records
+
+---
+
+## 10. Security Best Practices
+
+🔑 Key Management
+
+- Rotate keys regularly
+- Separate keys for transfer vs update
+- Revoke unused keys immediately
+- Store keys in Vault or KeePass
+
+🔒 Access Control
+
+- Restrict allow-transfer and allow-update to trusted IPs and keys
+- Avoid using shared update keys across clients
+
+🧩 Operational Hardening
+
+- Run named as a non-privileged user
+- Restrict key file permissions (640)
+- Disable dynamic updates on static zones
+
+📜 Logging and Auditing
+
+- Enable query/update logging in BIND
+- Periodically review logs for anomalies
+- Optionally integrate with a SIEM
+
+🧪 Testing
+
+- Always validate updates with dig
+- Test failure cases (wrong key, expired TTLs, etc.)
+
+---
+
+## 11. Next Steps
+
+This Dynamic DNS configuration is the foundation for broader reconfiguration:
+
+1. Migrate to IPv6 – replace IPv4 addressing with IPv6
+2. Introduce Managed Switches – VLAN support for tenant/service isolation
+3. Deploy OPNSense – central routing, firewalling, VLAN separation
+4. Adopt SDN principles – prepare for multi-tenant cloud simulation
+
+Each step will be documented in follow-up guides and YouTube walkthroughs.
