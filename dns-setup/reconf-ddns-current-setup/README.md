@@ -34,7 +34,7 @@ sudo chmod g-w,o-rwx /etc/bind/ddns-signatures
 
 ```bash
 ...
-include "/etc/bind/ddns-sgnatures";
+include "/etc/bind/ddns-signatures";
 ...
 ```
 
@@ -44,7 +44,7 @@ include "/etc/bind/ddns-sgnatures";
 ```bash
 allow-transfer {
   ...
-  ip addresses allowd for transfer
+  ip addresses allowed for transfer
   ...
   key ddns-transfer-key;
 };
@@ -58,18 +58,18 @@ Pay attention to the semicolons, omitting those is a common error.
 sudo systemctl restart named
 ```
 
-With this configuration zone transfers require now authentication using the transfer key. I
-added the key to my Keepass database. And I am creating some bash aliases for myself, to
-facilitate the key setup. With this alias the key will not be displayed on the terminal
-ans will not be shown in the bash history.
+With this configuration, zone transfers require now authentication using the transfer key. I
+added the key to my Keepass database. And I am creating a bash alias for myself, to
+fasilitate the key setup. With this alias the key will not be displayed on the terminal
+and will not be shown in the bash history.
 
-In .bash_aliases
+ini file .bash_aliases
 
 ```bash
 alias set_HMAC='read -i "hmac-sha512 " -ep "Encrypt. Algorithm " HMAC_ALG;read -i "ddns-update-key " -ep "DDNS User " HMAC_USER;read -sep "DDNS Password " HMAC_PASSWD;HMAC=${HMAC_ALG}:${HMAC_USER}:${HMAC_PASSWD}'
 ```
 
-This will create environment variable HMAC, which then can be used in dig and later in nsupdate
+This will create environment variable HMAC, which then can be used in commands dig and nsupdate.
 
 For a zone transfer using dig, as an example:
 
