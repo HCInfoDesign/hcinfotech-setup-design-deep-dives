@@ -1,4 +1,4 @@
-![HCInfoTech Banner] (../../common/images/DDNS-GitHub Banner.png)
+![HCInfoTech Banner](../../common/images/DDNS-GitHub Banner.png)
 
 # Network Reconfiguration: Dynamic DNS and TSIG
 
