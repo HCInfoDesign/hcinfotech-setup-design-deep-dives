@@ -9,7 +9,7 @@
 - Zone Transfer Key
 
 ```bash
-tsig-keygen -a hmac-sha512 ddns-trasfer-key | sudo tee -a /etc/bind/ddns-signatures 1>/dev/null 2>&1
+tsig-keygen -a hmac-sha512 ddns-transfer-key | sudo tee -a /etc/bind/ddns-signatures 1>/dev/null 2>&1
 ```
 
 - Zone Update Key
@@ -22,5 +22,8 @@ tsig-keygen -a hmac-sha512 ddns-update-key | sudo tee -a /etc/bind/ddns-signatur
 
 ```bash
 sudo chown root:bind /etc/bind/ddns-signatures
-sudo chmod g-wo-rwx /etc/bind/ddns-signatures
+sudo chmod g-w,o-rwx /etc/bind/ddns-signatures
 ```
+
+- Add the generated keys to a Vault or a similar key management facility. All users allowd to execute zone transfers need
+  key ddns-transfer-key. Users allowd to update the zone need the ddns-update-key for this purpose.
