@@ -7,9 +7,9 @@ The first step is enabling **secure Dynamic DNS** using **TSIG keys** for authen
 
 ---
 
-## 1. Current vs Target Configuration
+## 1. Current vs target configuration
 
-### Current Setup
+### Current setup
 
 - 3-node Proxmox cluster (HP Proliant DL360 Gen8)
 - 1 standalone Proxmox node simulating a distant region
@@ -74,7 +74,7 @@ allow-transfer {
 };
 ```
 
-⚠️ Don’t forget semicolons — missing them is a common error.
+⚠️ Don’t forget semicolons, missing them is a common error.
 
 Restart BIND:
 
@@ -114,7 +114,7 @@ Explanation:
 
 ## 5. Configure the secondary name servers to use the same key for transfers
 
-Securaly copy file /etc/bind/ddns-signatures to the secondary DNS servers
+Securely copy file /etc/bind/ddns-signatures to the secondary DNS servers
 
 Add a section indicating the primary name server after the transfer key in file /etc/bind/ddns-signatures
 
@@ -130,7 +130,7 @@ server 192.168.1.20 {   # example ip of primary name server
 };
 ```
 
-Key ddns-update-key can be deleted from the file on the secondary.
+Key ddns-update-key can be deleted from the file on the secondary nameserver.
 
 Restart named on secondary
 
@@ -140,10 +140,10 @@ sudo systemctl restart named
 
 ---
 
-## 6. Configure the primaryname server for dynamic updates
+## 6. Configure the primary nameserver for dynamic updates
 
 Update /etc/bind/named.conf.local on the primary name server and add the following section
-to any zone that will be updated dynamically:
+to any zone prepared for dynamical update:
 
 ```bash
 update-policy {
@@ -151,8 +151,8 @@ update-policy {
 };
 ```
 
-AppArmor prevents nmed from updazing files in /etc/bind. The zone file needs to be put into
-directoy /var/lib/bind/ in order for it to be updated by named.
+AppArmor prevents named from updating files in /etc/bind. The zone file needs to be stashed in
+directory /var/lib/bind/ in order for it to be updated by named.
 
 Example zone entry in /etc/bind/named.conf.local:
 
@@ -170,7 +170,7 @@ zone "example.com" IN {
 ```
 
 Create the initial zone file in /var/lib/bind/. The zone file needs to contain the SOA record,
-and the NS records of the name servers. Everything else can be loaded dynamically with nsupdate.
+and the NS records of the name servers. nsupdate loads everything else dynamically.
 
 Example initial zone file /var/lib/bind/example.com.zone:
 
@@ -202,16 +202,16 @@ dig @ns1.example.com +noall +answer example.com -y \$HMAC -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]' > ~/example.com.zone.transfer
 ```
 
-Add all t^he record types in your zone that need to be transferred. ^Here you can cleanup
+Add all the record types in your zone that need to be transferred. Here you can cleanup
 the entries in the created file and remove everything that is not needed anymore.
 
-Add "update add " in front of every line. In vim thsi can be done with:
+Add "update add " in front of every line. In vim this can be done with:
 
 ```bash
 :%s/^/update add /
 ```
 
-Add the following two lines as th first two lines of the file
+Add the following two lines as the first two lines of the file
 
 ```bash
 server ns1.example.com
@@ -234,12 +234,12 @@ This updates all of the records of the file into the new zone. It creates a jour
 example.com.zone.jnl in /var/lib/bind and it notifies all the secondary name servers of
 the changed zone.
 
-Entries in this zone should only be maintained using ndupdate, as manually changing the zone
-file will cause conflicts and inconsistancies.
+Manage this zone only with nsupdate, as manually changing the zone
+file will cause conflicts and inconsistencies.
 
-## 8. Dynamic Updates with nsupdate
+## 8. Dynamic updates with nsupdate
 
-### Add a Record
+### Add a record
 
 update.txt:
 
@@ -250,7 +250,7 @@ update add test.example.com. 3600 IN AAAA 2001:db8::1234
 send
 ```
 
-Execute:
+Run:
 
 ```bash
 nsupdate -y $HMAC update.txt
@@ -267,7 +267,7 @@ update delete test.example.com. IN AAAA
 send
 ```
 
-Execute:
+Run:
 
 ```bash
 nsupdate -y $HMAC update.txt
@@ -279,20 +279,19 @@ Verify:
 dig @ns1.example.com test.example.com AAAA
 ```
 
+I am temporarily using the following API [bind-rest-api](https://gitlab.com/jaytuck/bind-rest-api.git), based on dnspython. It serves as a start,
+but it needs work in part of the functionality as well aa with security.
+
 ---
 
-## 9. Implement a Temporary API based on dnspython to update DNS records
-
----
-
-## 10. Security Best Practices
+## 9. Security best practices
 
 🔑 Key Management
 
 - Rotate keys regularly
-- Separate keys for transfer vs update
+- Separate keys for transfer compared to update
 - Revoke unused keys immediately
-- Store keys in Vault or KeePass
+- Store keys in Vault or KeePass
 
 🔒 Access Control
 
@@ -318,13 +317,13 @@ dig @ns1.example.com test.example.com AAAA
 
 ---
 
-## 11. Next Steps
+## 10. Next steps
 
 This Dynamic DNS configuration is the foundation for broader reconfiguration:
 
 1. Migrate to IPv6 – replace IPv4 addressing with IPv6
 2. Introduce Managed Switches – VLAN support for tenant/service isolation
 3. Deploy OPNSense – central routing, firewalling, VLAN separation
-4. Adopt SDN principles – prepare for multi-tenant cloud simulation
+4. Adopt Software-Defined Networking (SDN) principles – prepare for multi-tenant cloud simulation
 
-Each step will be documented in follow-up guides and YouTube walkthroughs.
+I will document each step in follow-up guides and YouTube walk-throughs.
