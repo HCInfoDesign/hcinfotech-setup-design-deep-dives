@@ -124,7 +124,7 @@ zone "example.com" IN {
 };
 ```
 
-Example:¨[named.conf.local](./config/primary-dns/sample.named.conf.local)
+Example: [named.conf.local](./config/primary-dns/sample.named.conf.local)
 
 **Validate configuration**
 

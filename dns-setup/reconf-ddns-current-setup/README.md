@@ -16,7 +16,7 @@ The first step comprises enabling **secure Dynamic DNS** by using **TSIG keys** 
 - Unmanaged switch, bonded NIC pairs
 - IPv4 only
 
-![Current Network](../../common/images/network-current-diagram.png)
+[Current Network](../../common/images/network-current-diagram.png)
 
 ---
 
@@ -28,7 +28,7 @@ The first step comprises enabling **secure Dynamic DNS** by using **TSIG keys** 
 - IPv6 for internal addressing
 - Dynamic DNS with TSIG authentication
 
-![Target Network](../../common/images/network-to-be-diagram.png)
+[Target Network](../../common/images/network-to-be-diagram.png)
 
 ---
 
