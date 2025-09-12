@@ -308,7 +308,7 @@ but it needs work in part of the capability and with security.
 
 - Enable query/update logging in bind
 - Periodically review logs for anomalies
-- Optionally integrate with a SIEM
+- Optionally integrate with Security Information and Event Management (SIEM)
 
 🧪 Testing
 

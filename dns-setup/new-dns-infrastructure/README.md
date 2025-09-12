@@ -1,245 +1,331 @@
 ![HCInfoTech Banner](../../common/images/dns-infrastructure-setup-banner.png)
 
-# New DNS infrastructure setup
+# DNS infrastructure setup on Ubuntu
 
-## DNS Landscape
+This guide documents the installation and configuration of a three-node BIND9 nameserver setup on Ubuntu 25.04 (_Plucky Puffin_).  
+All VMs use **full disk encryption at rest** and are deployed on a Proxmox cluster.
 
-### VMs used
+## 1. DNS landscape
 
-- b100udns1 - primary nameserver - (Proxmox node 1)
-- b100udns2 - secondary nameserver - (Proxmox node 2)
-- b100udns3 - secondary nameserver - (Proxmox node 3)
+### Virtual machines
 
-VMs using Ubuntu 25.04 (plucky puffin) with full disk encryption at rest
+| Hostname      | Role          | Location       |
+| ------------- | ------------- | -------------- |
+| **b100udns1** | Primary DNS   | Proxmox Node 1 |
+| **b100udns2** | Secondary DNS | Proxmox Node 2 |
+| **b100udns3** | Secondary DNS | Proxmox Node 3 |
 
-## Installation and configuration
+### Topology
+
+![DNS Topology Intranet](../../common/images/internal-dns-topology.png)
+Configure newly installed nameservers as secondaries for the current domain in.hcinfotech.ch. b100udns1
+assumes the role of primary for all newly created zones and transfers them to b100udns2
+and b100udns2.
+
+Final goal:
+
+- After the complete network redesign, b100udns1 assumes the authoritative role for in.hcinfotech.ch
+- Retire the old DNS infrastructure (b100u002, b100u003 and b100u004)
+
+---
+
+## 2. Installation
 
 ### Install BIND9
 
-Standard Ubuntu/Debian bind9 package used. To install:
+Standard Ubuntu/Debian package:
 
 ```bash
 sudo apt update && sudo apt install -y bind9
 ```
 
-### BIND9 Configuration
+Default configuration directory /etc/bind/
 
-Default configuration directory /etc/bind/. Standard files to be updated or created:
+---
 
-- named.conf
-- named.local.options
-- named.conf.local
+## 3. Primary nameserver configuration
 
-#### Configuration of a primary nameserver
+The primary server is authoritative for all managed zones. If using dynamic updates or TSIG-protected zone transfers,
+first complete the ![dynamic DNS setup](../reconf-ddns-current-setup/README.md)
 
-- named.conf
+**Update** /etc/bind/named.conf
 
-If configuring the server for dynamic updates or restricted zone transfers follow the steps as outline in
-![Dynamic DNS Setup](../reconf-ddns-current-setup/README.md)
-
-named.conf requires an include statement to reference the ddns-signature file
-
-```bash
-include "/etc/bind/ddns-signature"        # file containing the key stanzas created by tsig-keygen
-```
-
-- named.conf.options
-
-Add an Access Control List (acl) stanza restricting access to specific networks or IP addresses. Unless there are other measures
-in place to restrict communication, access should be restricted to internal networks to prevent spoofing and DoS attacks.
-
-```bash
-acl internal {
-  192.168.1.0/24;
-  10.5.20.0/24;
-};
-```
-
-⚠️Don’t forget semicolons, missing them is a common error.
-
-Add forwarders section to the options stanza. All queries fo unknown zones will be handed of to the forwardes.
-
-```bash
-forwarders {
-  8.8.8.8;        # Google DNS as an example
-  1.1.1.1;        # CloudFlare
-};
-```
-
-Add the allow-query option to one of the configured acl. (e.g. internal)
-
-```bash
-allow-quesry { internal; };
-```
-
-Add the IP addresses of the secondary nameservers to the allow-notify and allow-transfer sextions in the opton stanza
-
-```bash
-allow-notify {
-  192.168.1.35;       # first secondary nameserver
-  192.168.5.68;       # second secondary nameserver
-};
-```
-
-```bash
-allow-transfer {
-  192.168.1.35;       # first secondary nameserver
-  192.168.5.68;       # second secondary nameserver
-};
-```
-
-```bash
-notify yes;
-recursion yes;
-```
-
-![sample named.conf.options here](./config/primary-dns/sample.named.conf.options)
-
-- named.conf.local
-
-This file containes entries for the managed zones.
-
-For each zone for which this nameserver is authorative enter the following stanza:
-
-```bash
-zone "example.com" IN {
-    type primary;
-    file "/var/lib/bind/example.com.zone";        # in case dynamic update is configured the i
-                                                  # zone file needs to be in /var/lib/bind, else it
-                                                  # can be created in /etc/bind
-    allow-transfer {
-      192.168.1.35;                               # secondary nameservers
-      192.168.1.68;
-      key ddns-transfer-key;                      # required if transfer is protectd by TSIG, eles ommit
-    };
-    update-policy {                               #required if dynamic updates are cionfigured, else ommit
-      grant ddns-update-key zonesub ANY;
-    };
-};
-```
-
-Follow the format documented for a [secondary nameserver](#configuration-of-a-secondary-nameserver)
-
-![sample named.conf.local here](./config/primary-dns/sample.named.conf.local)
-
-- Configuration validation
-
-Execute named-checkconf and named-checkzone commands to validate.
-
-```bash
-sudo named-checkconf
-sudo named-checkzone a.example.com /etc/bind/a.example.conf.zone
-```
-
-- Start named service and validate status and logs
-
-```bash
-sudo systemctl start named
-```
-
-```bash
-systemctl status named
-
-sudo journalctl -eu named
-```
-
-#### Configuration of a secondary nameserver
-
-- named.conf
-
-Create a file containing the transfer key and the stanza for the primary requesting the key. (e.g. ddns-signature)
-
-```bash
-key "ddns-transfer-key" {           # TSIG key name
-        algorithm hmac-sha512;      # TSIG algorithm
-        secret "xxxxx...";          # TSIG password
-};
-server 192.168.1.20 {               # IP address of primary nameserver
-  keys {
-    ddns-transfer-key;              # references transfer key from stanza above
-  };
-};
-```
-
-Change ownership and permissions of the file. This needs to be accessible only to the named process.
-
-```bash
-chwon root:bind /etc/bind/ddns-signature
-chmod g+r,o-rwx /etc/bind/ddns-signature
-```
-
-Add tn include statement for the file to named.conf
+Add an include for the TSIG key file if dynamic updates or TSIG are used:
 
 ```bash
 ...
-include "/etc/bind/ddns-signatures"
+include "/etc/bind/ddns-signatures";  # file containing TSIG keys created with tsig-keygen
 ```
 
-- named.conf.options
+**Update** /etc/bind/named.conf.options
 
-Add an Access Control List (acl) stanza restricting access to specific networks or IP addresses. Unless there are other measures
-in place to restrict communication, access should be restricted to internal networks to prevent spoofing and DoS attacks.
+**Restrict access to internal networks**
 
 ```bash
 acl internal {
   192.168.1.0/24;
   10.5.20.0/24;
 };
-```
-
-⚠️Don’t forget semicolons, missing them is a common error.
-
-Add forwarders section to the options stanza. All queries fo unknown zones will be handed of to the forwardes.
-
-```bash
-forwarders {
-  8.8.8.8;        # Google DNS as an example
-  1.1.1.1;        # CloudFlare
+...
+options {
+  allow-query { internal; };
+  recursion yes;
+  notify yes;
+...
 };
 ```
 
-Add the allow-query option to one of the configured acl. (e.g. internal)
+⚠️ **Don't forget semicolons**, missing them causes common configuration errors.
+
+**Configure forwarders**
 
 ```bash
-allow-quesry { internal; };
+forwarders {
+    8.8.8.8;  # Google DNS
+    1.1.1.1;  # Cloudflare DNS
+  };
 ```
 
-![sample named.conf.options here](./config/secondary-dns/sample.named.conf.options)
-
-- named.conf.local
-
-Add the zones for which this DNS server is secondary to named.conf.local
+**Allow Notifications and Transfers to Secondaries**
 
 ```bash
-zone "example.com" IN {                   # zone example.com
-  type secondary;
-  file "/var/lib/bind/example.com.zone";  # location of the transferred zone file
-  primaries {
-      192.168.1.20;                       # IP address of the authorative nameserver for the zone
+allow-notify {
+    192.168.1.35;  # secondary #1
+    192.168.5.68;  # secondary #2
+  };
+
+  allow-transfer {
+    192.168.1.35;
+    192.168.5.68;
+    key ddns-transfer-key;  # include only if TSIG-protected transfers are used
   };
 };
 ```
 
-⚠️The zone file needs to be located in /vart/lib/bind. AppArmor prevents named form updating files in /etc/bind
+Example: ![named.conf.options](./config/primary-dns/sample.named.conf.options)
 
-![sample named.conf.local here](./config/secondary-dns/sample.named.conf.local)
+**Update** /etc/bind/named.conf.local
 
-- Configuration validation
+Define authoritative zones
 
-Execute named-checkconf command to validate.
+```bash
+zone "example.com" IN {
+  type primary;
+  file "/var/lib/bind/example.com.zone";   # must be in /var/lib/bind if dynamic updates are enabled
+  allow-transfer {
+    192.168.1.35;                           # secondary nameservers
+    192.168.5.68;
+    key ddns-transfer-key;                  # only here if TSIG-protected transfers are configured
+  };
+  update-policy {                           # only present if dynamic zone updates are configurd
+    grant ddns-update-key zonesub ANY;
+  };
+};
+```
+
+Example:¨![named.conf.local](./config/primary-dns/sample.named.conf.local)
+
+**Validate configuration**
 
 ```bash
 sudo named-checkconf
+sudo named-checkzone example.com /var/lib/bind/example.com.zone
 ```
 
-- Start named service and validate status and logs
+**Start and verify named service**
 
 ```bash
 sudo systemctl start named
-```
-
-```bash
 systemctl status named
-
 sudo journalctl -eu named
 ```
+
+---
+
+## 4. Secondary nameserver configuration
+
+The secondary servers receive zone data from the primary using AXFR transfers.
+
+**Create** /etc/bind/ddns-signatures
+
+If TSIG-protected transfers are used:
+
+```bash
+key "ddns-transfer-key" {
+  algorithm hmac-sha512;
+  secret "xxxxx...";   # TSIG secret from primary
+};
+
+server 192.168.1.20 {           # IP of primary nameserver
+  keys { ddns-transfer-key; };
+};
+```
+
+Set permissions:
+
+```bash
+sudo chown root:bind /etc/bind/ddns-signatures
+sudo chmod g+r,o-rwx /etc/bind/ddns-signatures
+```
+
+Add include statement to /etc/bind/named.conf:
+
+```bash
+...
+include "/etc/bind/ddns-signatures";
+...
+```
+
+**Update** /etc/bind/named.conf.options
+Restrict access and configure forwarders as for the primary:
+
+```bash
+acl internal {
+  192.168.1.0/24;
+  10.5.20.0/24;
+};
+
+options {
+  allow-query { internal; };
+  recursion yes;
+
+  forwarders {
+    8.8.8.8;
+    1.1.1.1;
+  };
+};
+```
+
+Example: ![named.conf.options](./config/secondary-dns/sample.named.conf.options)
+
+**Update** /etc/bind/named.conf.local
+
+Add zones where this server is secondary:
+
+```bash
+zone "example.com" IN {
+  type secondary;
+  file "/var/lib/bind/example.com.zone";  # must be writable by named, AppArmor restricts /etc/bind
+  primaries {
+    192.168.1.20;  # IP of primary nameserver
+  };
+};
+```
+
+**Validate and start named service**
+
+```bash
+sudo named-checkconf
+sudo systemctl start named
+systemctl status named
+sudo journalctl -eu named
+```
+
+---
+
+## 5. Security notes
+
+- **Never commit TSIG secrets** or ddns-signatures to a public repo.
+- Restrict ACLs to trusted networks only.
+- Rotate TSIG keys periodically and store them securely.
+- Store dynamically updated zones in /var/lib/bind due to AppArmor restrictions.
+
+---
+
+## 6. Logging and Monitoring (Recommended)
+
+**Enable query logging**
+Edit /etc/vind/named.conf.options
+
+```bash
+logging {
+  channel query_log {
+    file "/var/log/named/query.log" versions 3 size 10m;
+    severity info;
+    print-time yes;
+  };
+  category queries { query_log; };
+};
+```
+
+Create the log directory and restart:
+
+```bash
+sudo mkdir -p /var/log/named
+sudo chown bind:bind /var/log/named
+sudo systemctl restart named
+```
+
+Tail logs live:
+
+```bash
+sudo tail -f /var/log/named/query.log
+```
+
+**Monitor zone transfer failures**
+
+```bash
+sudo journalctl -u named | grep "Transfer"
+```
+
+For production environments, integrate alerts with Prometheus, Zabbix, or Nagios.
+
+**Log rotation**
+
+Create /etc/logrotate.d/bind:
+
+```bash
+/var/log/named/*.log {
+  daily
+  rotate 7
+  compress
+  missingok
+  notifempty
+  create 0640 bind bind
+  sharedscripts
+  postrotate
+    systemctl reload named > /dev/null
+  endscript
+}
+```
+
+---
+
+## 7. Verification
+
+To confirm replication works:
+
+```bash
+dig @b100udns2 example.com AXFR
+```
+
+Use the set_HMAC alias to set the TSIG key, if the landscape uses TSIG-transfer.
+
+You should see the full zone transferred from the primary.
+Repeat with b100udns3 to verify both secondaries are in sync.
+
+---
+
+## 8. Troubleshooting
+
+| Symptom               | Likely cause                    | Fix                                 |
+| --------------------- | ------------------------------- | ----------------------------------- |
+| named-checkconf fails | Missing ;                       | Double-check all config files       |
+| named fails to start  | Wrong permissions on zone files | Use /var/lib/bind + chown root:bind |
+| Zone not transferring | IP mismatch or missing key      | Verify allow-transfer and TSIG key  |
+| dig AXFR → REFUSED    | No AXFR permission              | Check allow-transfer stanza         |
+| SERVFAIL              | AppArmor preventing writes      | Move zones to /var/lib/bind         |
+| Key errors            | Wrong TSIG secret/algorithm     | Re-run tsig-keygen, sync both ends  |
+
+**Debug commands**
+
+```bash
+sudo named-checkconf
+sudo named-checkzone example.com /var/lib/bind/example.com.zone
+sudo journalctl -fu named
+dig @b100udns1 example.com AXFR -y hmac-sha512:ddns-transfer-key:<base64_secret>
+```
+
+---
+
+This completes the setup of a secure, monitored, and redundant BIND9 DNS infrastructure on Ubuntu.
