@@ -18,6 +18,7 @@ All VMs use **full disk encryption at rest** and are deployed on a Proxmox clust
 ### Topology
 
 ![DNS Topology Intranet](../../common/images/internal-dns-topology.png)
+
 Configure newly installed nameservers as secondaries for the current domain in.hcinfotech.ch. b100udns1
 assumes the role of primary for all newly created zones and transfers them to b100udns2
 and b100udns2.
