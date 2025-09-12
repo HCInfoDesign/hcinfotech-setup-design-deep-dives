@@ -3,11 +3,11 @@
 # Network Reconfiguration: Dynamic DNS and TSIG
 
 This repository documents the reconfiguration of a Proxmox-based lab network to simulate a cloud-provider-like environment.  
-The first step is enabling **secure Dynamic DNS** using **TSIG keys** for authenticated zone transfers and updates.
+The first step comprises enabling **secure Dynamic DNS** by using **TSIG keys** for authenticated zone transfers and updates.
 
 ---
 
-## 1. Current vs target configuration
+## 1. Current compared to target configuration
 
 ### Current setup
 
@@ -16,11 +16,11 @@ The first step is enabling **secure Dynamic DNS** using **TSIG keys** for authen
 - Unmanaged switch, bonded NIC pairs
 - IPv4 only
 
-![Current Network](readme_current_network.png)
+![Current Network](../../common/images/network-current-diagram.png)
 
 ---
 
-### Target Setup
+### Target setup
 
 - Same Proxmox nodes
 - Managed switches with VLAN support
@@ -32,9 +32,9 @@ The first step is enabling **secure Dynamic DNS** using **TSIG keys** for authen
 
 ---
 
-## 2. Dynamic DNS Setup
+## 2. Dynamic DNS setup
 
-### Generate TSIG Keys
+### Generate TSIG keys
 
 ````bash
 # Zone Transfer Key
@@ -57,7 +57,7 @@ Store keys securely in a password manager or Vault.
 
 ---
 
-## 3. Configure BIND
+## 3. Configure bind
 
 Include the TSIG keys in /etc/bind/named.conf:
 
@@ -74,9 +74,9 @@ allow-transfer {
 };
 ```
 
-⚠️ Don’t forget semicolons, missing them is a common error.
+⚠️ Don’t forget semicolons, missing them causes a common error.
 
-Restart BIND:
+Restart bind:
 
 ```bash
 sudo systemctl restart named
@@ -86,7 +86,7 @@ sudo systemctl restart named
 
 ## 4. Zone Transfers with dig
 
-Create a shell alias to load credentials without exposing them in history:
+Create a shell alias to load credentials without exposing them in the shell history:
 
 ```bash
 alias set_HMAC='read -i "hmac-sha512 " -ep "Encrypt. Algorithm: " HMAC_ALG; \
@@ -95,7 +95,7 @@ read -sep "DDNS Password: " HMAC_PASSWD; \
 HMAC=\${HMAC_ALG}:\${HMAC_USER}:\${HMAC_PASSWD}'
 ```
 
-Exported variable $HMAC can now be used with dig and nsupdate.
+Use the exported variable $HMAC with dig and nsupdate.
 
 Example zone transfer:
 
@@ -130,7 +130,7 @@ server 192.168.1.20 {   # example ip of primary name server
 };
 ```
 
-Key ddns-update-key can be deleted from the file on the secondary nameserver.
+You can delete key ddns-update-key from the file on the secondary nameserver.
 
 Restart named on secondary
 
@@ -202,10 +202,10 @@ dig @ns1.example.com +noall +answer example.com -y \$HMAC -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]' > ~/example.com.zone.transfer
 ```
 
-Add all the record types in your zone that need to be transferred. Here you can cleanup
-the entries in the created file and remove everything that is not needed anymore.
+Add all the record types in your zone that need to be transferred. You can cleanup all the unwanted entries now,
+if so desired.
 
-Add "update add " in front of every line. In vim this can be done with:
+Add "update add " in front of every line. For example in vim with:
 
 ```bash
 :%s/^/update add /
@@ -230,12 +230,12 @@ Use nsupdate to create the new zone
 nsupdate -y $HMAC ~/example.com.zone.transfer
 ```
 
-This updates all of the records of the file into the new zone. It creates a journal file
+This updates all the records of the file into the new zone. It creates a journal file
 example.com.zone.jnl in /var/lib/bind and it notifies all the secondary name servers of
 the changed zone.
 
 Manage this zone only with nsupdate, as manually changing the zone
-file will cause conflicts and inconsistencies.
+file causes conflicts and inconsistencies.
 
 ## 8. Dynamic updates with nsupdate
 
@@ -279,8 +279,8 @@ Verify:
 dig @ns1.example.com test.example.com AAAA
 ```
 
-I am temporarily using the following API [bind-rest-api](https://gitlab.com/jaytuck/bind-rest-api.git), based on dnspython. It serves as a start,
-but it needs work in part of the functionality as well aa with security.
+I'm temporarily using the following API [bind-rest-api](https://gitlab.com/jaytuck/bind-rest-api.git), based on dnspython. It serves as a start,
+but it needs work in part of the capability and with security.
 
 ---
 
@@ -306,14 +306,14 @@ but it needs work in part of the functionality as well aa with security.
 
 📜 Logging and Auditing
 
-- Enable query/update logging in BIND
+- Enable query/update logging in bind
 - Periodically review logs for anomalies
 - Optionally integrate with a SIEM
 
 🧪 Testing
 
 - Always validate updates with dig
-- Test failure cases (wrong key, expired TTLs, etc.)
+- Test failure cases (wrong key, expired TTL, etc.)
 
 ---
 
@@ -324,6 +324,6 @@ This Dynamic DNS configuration is the foundation for broader reconfiguration:
 1. Migrate to IPv6 – replace IPv4 addressing with IPv6
 2. Introduce Managed Switches – VLAN support for tenant/service isolation
 3. Deploy OPNSense – central routing, firewalling, VLAN separation
-4. Adopt Software-Defined Networking (SDN) principles – prepare for multi-tenant cloud simulation
+4. Adopt Software-Defined Networking (SDN) principles – prepare for multitenant cloud simulation
 
-I will document each step in follow-up guides and YouTube walk-throughs.
+I document each step in follow-up guides and YouTube walk-throughs.
