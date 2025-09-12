@@ -28,7 +28,7 @@ The first step is enabling **secure Dynamic DNS** using **TSIG keys** for authen
 - IPv6 for internal addressing
 - Dynamic DNS with TSIG authentication
 
-![Target Network](readme_target_network.png)
+![Target Network](../../common/images/network-to-be-diagram.png)
 
 ---
 
