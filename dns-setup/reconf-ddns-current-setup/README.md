@@ -195,7 +195,7 @@ ns1               IN      A       192.168.1.20
 
 ## 7. Transfer the currently existing zone to the new dynamic zone
 
-Use dig to create the transfer file, after executing the alias to create the $HMAC variable
+Use dig to create the transfer file, after executing set_MAC alias to create the $HMAC variable
 
 ```bash
 dig @ns1.example.com +noall +answer example.com -y \$HMAC -t AXFR \
