@@ -65,7 +65,7 @@ Include the TSIG keys in /etc/bind/named.conf:
 include "/etc/bind/ddns-signatures";
 ```
 
-Require signed zone transfers:
+Require signed zone transfers in namde.conf.options:
 
 ```bash
 allow-transfer {
@@ -100,13 +100,13 @@ Use the exported variable $HMAC with dig and nsupdate.
 Example zone transfer:
 
 ```bash
-dig @ns1.in.hcinfotech.ch +noall +answer in.hcinfotech.ch -y $HMAC -t AXFR \
+dig @ns1.example.com +noall +answer example.com -y $HMAC -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]'
 ```
 
 Explanation:
 
-- Connects to the primary nameserver for zone in.hcinfotech.ch
+- Connects to the primary nameserver for zone example.com
 - Initiates an authenticated AXFR zone transfer
 - Filters for A, CNAME, and MX records
 
@@ -121,7 +121,7 @@ Add a section indicating the primary name server after the transfer key in file 
 ```bash
 key "ddns-transfer-key" {
     algorithm hmac-sha512;
-    isecret "XXXX";
+    secret "Alongandverysecretassphrase";
 };
 server 192.168.1.20 {   # example ip of primary name server
     keys {
@@ -142,6 +142,54 @@ sudo systemctl restart named
 
 ## 6. Configure the primary nameserver for dynamic updates
 
+### 6.1 Prepare the transfer files for the zones
+
+Prepare the files for the transfer by nsupdate ahead of time. The zone resolution
+is unavaialble until nsupdate has updated the zones, after we placed the empty zone stubs
+into /var/lib/bind and restart named.
+
+The transfer files use the following format:
+
+```bash
+server 192.168.1.20          # IP address of primary name server
+zone example.com             # the zone to be transferred
+update add server1.example.com 3600 IN A 192.168.1.135
+...
+update add server50.example.com 3600 IN A 192.168.1.211
+send                         # signal nsupdate to start the transfer
+```
+
+Transfer of the reverse lookup follows the same format. Zone replaced by the
+reverse lookup zone (e.g. 1.168.192.in-addr.arpa).
+'update add' command adding the reverse lookup entries
+(e.g. 135.1.168.192.in-addr.arpa 3600 IN PTR xxx.example.com.)
+
+You could use something such as the following scripts to create these files.
+
+```bash
+echo "server 192.168.1.20" | sudo tee /etc/bind/example.com.zone.transfer
+echo "zone example.com." | sudo tee -a /etc/bind/example.com.zone.transfer
+dig @ns1.example.com +noall +answer example.com -y $HMAC -t AXFR \
+| grep -E $'[\t| ](A|CNAME|MX)[\t| ]' \
+| while read LINE; do \
+    echo "update add ${LINE}" | sudo tee -a /etc/bind/example.com.zone.transfer \
+  done
+echo "send" | sudo tee -a /etc/bind/example.com.zone.transfer
+```
+
+Similar for the transfer of the reverse lookup zone
+
+```bash
+echo "server 192.168.1.20" | sudo tee /etc/bind/192.168.1.zone.transfer
+echo "zone 1.168.192.in-addr.arpa" | sudo tee -a /etc/bind/192.168.1.zone.transfer
+dig @ns1.example.com +noall +answer 1.168.192.in-addr.arpa -y $HMAC -t AXFR \
+| grep -E $'[\t| ](PTR)[\t| ]' \
+| while read LINE; do \
+    echo "update add ${LINE}" | sudo tee -a /etc/bind/192.168.1.zone.transfer \
+  done
+echo "send" | sudo tee -a /etc/bind/192.168.1.zone.transfer
+```
+
 Update /etc/bind/named.conf.local on the primary name server and add the following section
 to any zone prepared for dynamical update:
 
@@ -160,14 +208,13 @@ Example zone entry in /etc/bind/named.conf.local:
 zone "example.com" IN {
   type primary;
   file "/var/lib/bind/example.com.zone";
-  allow-transfer {
-    192.168.0.20;    # example secondary name server
-  };
   update-policy {
     grant ddns-update-key zonesub ANY;
   };
 };
 ```
+
+### 6.2 Create the initial zone files
 
 Create the initial zone file in /var/lib/bind/. The zone file needs to contain the SOA record,
 and the NS records of the name servers. nsupdate loads everything else dynamically.
@@ -191,38 +238,44 @@ $ORIGIN example.com.
 ns1               IN      A       192.168.1.20
 ```
 
+Here increase the serial number to signal the secondary servers to re-transfer the zone.
+Create a similar zone file for the reverse lookup.
+
+### 6.3 Change the configuration in /etc/bind/named.conf.local
+
+Update /etc/bind/named.conf.local on the primary name server and add the following section
+to any zone prepared for dynamical update:
+
+```bash
+update-policy {
+ grant ddns-update-key zonesub ANY;
+};
+```
+
+AppArmor prevents named from updating files in /etc/bind. The zone file needs to be stashed in
+directory /var/lib/bind/ in order for it to be updated by named.
+
+Example zone entry in /etc/bind/named.conf.local:
+
+```bash
+zone "example.com" IN {
+  type primary;
+  file "/var/lib/bind/example.com.zone";
+  update-policy {
+    grant ddns-update-key zonesub ANY;
+  };
+};
+```
+
+Restart named
+
+```bash
+sudo systemctl restart named
+```
+
 ---
 
 ## 7. Transfer the currently existing zone to the new dynamic zone
-
-Use dig to create the transfer file, after executing set_MAC alias to create the $HMAC variable
-
-```bash
-dig @ns1.example.com +noall +answer example.com -y \$HMAC -t AXFR \
-| grep -E $'[\t| ](A|CNAME|MX)[\t| ]' > ~/example.com.zone.transfer
-```
-
-Add all the record types in your zone that need to be transferred. You can cleanup all the unwanted entries now,
-if so desired.
-
-Add "update add " in front of every line. For example in vim with:
-
-```bash
-:%s/^/update add /
-```
-
-Add the following two lines as the first two lines of the file
-
-```bash
-server ns1.example.com
-zone example.com
-```
-
-Add the following as the last line of the file:
-
-```bash
-send
-```
 
 Use nsupdate to create the new zone
 
