@@ -337,7 +337,88 @@ but it needs work in part of the capability and with security.
 
 ---
 
-## 9. Security best practices
+## 9. DNSSEC configuration
+
+DNSSEC (DNS Security Extension) provides cryptographic authentication of DNS information.
+A secure primary zone signs the transferred records, using private/public
+key pairs. The secondary nameservers can therefor verify that the data they receive
+originated at the primary for the zone.
+
+### 9.1 Generating the keys
+
+The zone requires a zone signing key (ZSK), and a key signing key (KSK). dssec-keygen
+creates both of these keys. Place the keys in the same location as the zone files.
+Here in directory /var/lib/bind/ for dynamically updated zones.
+
+```bash
+sudo -u bind dnssec-keygen -a ECDSAP256SHA256 -n ZONE -K /var/lib/bind/ example.com
+sudo -u bind dnssec-keygen -f KSK -a ECDSAP256SHA256 -n ZONE -K /var/lib/bind/ example.com
+```
+
+Add the public keys contained in files Kexample.com.+....key in /var/lib/bind/ to the zone using nsupdate
+
+```bash
+nsupdate -y $HMAC
+> server ns1.example.com
+> zone example.com
+> ttl 3600
+> update add example.com. IN DNSKEY 256 3 13 ab8df9.....a3d2==
+> update add example.com. IN DNSKEY 256 3 13 f6b78d.....a9ef==
+> send
+```
+
+### 9.2 Sign the zone by using dnssec-signzone
+
+```bash
+sudo -u bind dnssec-signzone -3 $(openssl rand -hex 8) -S -A -N INCREMENT -K /var/lib/bind -o tst.hcinfotech.ch. -t tst.hcinfotech.ch.zone
+```
+
+- -3 NSEC3 $(openssl rand -hex 8) creates a 16 character salt
+- -S smartly finds the keys in the specified key directory
+- -o the zone to be signed
+- -t the zone file
+- -A NSEC3 outout
+- -N increment the SOA serial
+
+Signing creates new zone file exmaple.com.zone.signed
+
+Update /etc/bind/named.conf.local and replace statement file "/var/lib/bind/example.come.zone" with
+"/var/lib/bind/example.com.zone.signed"
+
+Validate:
+
+```bash
+sudo -u bind named-checkconf
+sudo -u bind named-checkzone example.com /var/lib/bind/example.com.zone.signed
+```
+
+### 9.3 Update the secondary resolvers with the new trust anchor
+
+Trust anchor is the public key of the KSK file
+
+Update /etc/bind/named.conf.options on the secondaries to add the trust anchor
+
+```bash
+...
+options {
+    dnssec-validation yes;
+    ...
+};
+
+trust-anchors {
+    "ecample.com" static-key 257 3 13 "...the public key...==";
+};
+```
+
+Reload named configuration
+
+```bash
+sudo systemctl reload named
+```
+
+---
+
+## 10. Security best practices
 
 🔑 Key Management
 
@@ -370,7 +451,7 @@ but it needs work in part of the capability and with security.
 
 ---
 
-## 10. Next steps
+## 11. Next steps
 
 This Dynamic DNS configuration is the foundation for broader reconfiguration:
 
