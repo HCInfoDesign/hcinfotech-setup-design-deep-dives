@@ -1,0 +1,9 @@
+key "ddns-transfer-key" {
+        algorithm hmac-sha512;
+        secret "DY8s+187++....+0zPJboQ==";
+};
+key "ddns-update-key" {
+        algorithm hmac-sha512;
+        secret "YyOKLS76............yb2==";
+};
+

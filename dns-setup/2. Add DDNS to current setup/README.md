@@ -36,26 +36,27 @@ The first step comprises enabling **secure Dynamic DNS** by using **TSIG keys** 
 
 ### Generate TSIG keys
 
-````bash
+```bash
 # Zone Transfer Key
 tsig-keygen -a hmac-sha512 ddns-transfer-key | sudo tee -a /etc/bind/ddns-signatures 1>/dev/null 2>&1
 
 # Zone Update Key
 tsig-keygen -a hmac-sha512 ddns-update-key | sudo tee -a /etc/bind/ddns-signatures 1>/dev/null 2>&1
+```
 
 Set correct ownership and permissions:
 
 ```bash
 sudo chown root:bind /etc/bind/ddns-signatures
 sudo chmod g-w,o-rwx /etc/bind/ddns-signatures
-````
+```
 
 Store keys securely in a password manager or Vault.
 
 - Zone transfers → require ddns-transfer-key
 - Dynamic updates → require ddns-update-key
 
----
+## Example: [Primary ddns-signatures file](./config/primary-dns/ddns-signatures)
 
 ## 3. Configure bind
 
@@ -65,6 +66,8 @@ Include the TSIG keys in /etc/bind/named.conf:
 include "/etc/bind/ddns-signatures";
 ```
 
+Example: [primary named.conf](./config/primary-dns/named.conf)
+
 Require signed zone transfers in namde.conf.options:
 
 ```bash
@@ -73,6 +76,8 @@ allow-transfer {
     key ddns-transfer-key;
 };
 ```
+
+Example: [primary named.conf.options](./config/primary-dns/named.conf.options)
 
 ⚠️ Don’t forget semicolons, missing them causes a common error.
 
@@ -92,7 +97,7 @@ Create a shell alias to load credentials without exposing them in the shell hist
 alias set_HMAC='read -i "hmac-sha512 " -ep "Encrypt. Algorithm: " HMAC_ALG; \
 read -i "ddns-update-key " -ep "DDNS User: " HMAC_USER; \
 read -sep "DDNS Password: " HMAC_PASSWD; \
-HMAC=\${HMAC_ALG}:\${HMAC_USER}:\${HMAC_PASSWD}'
+HMAC=${HMAC_ALG}:${HMAC_USER}:${HMAC_PASSWD}'
 ```
 
 Use the exported variable $HMAC with dig and nsupdate.
@@ -131,6 +136,28 @@ server 10.1.50.32 {   # example ip of primary name server
 ```
 
 You can delete key ddns-update-key from the file on the secondary nameserver.
+
+Example: [secondary ddns-signatures file](./config/secondary-dns/ddns-signatures)
+
+Update /etc/bind/named.conf to include ddns-signature file.
+
+```bash
+...
+include "/etc/bind/ddns-signaturs";
+```
+
+Example: [secondary named.conf](./config/secondary-dns/named.conf)
+
+Add the key to allow-transfer in /etc/bind/named.conf.options
+
+```bash
+allow-transfer {
+    ...
+    key ddns-transfer-key;
+};
+```
+
+Example: [secondry named.conf.options](./config/secondary-dns/named.conf.options)
 
 Restart named on secondary
 
@@ -172,47 +199,27 @@ echo "zone tst.hcinfotech.ch." | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.tr
 dig @ns1.tst.hcinfotech.ch +noall +answer tst.hcinfotech.ch -y $HMAC -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]' \
 | while read LINE; do \
-    echo "update add ${LINE}" | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer \
+    echo "update add ${LINE}" | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer; \
   done
 echo "send" | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer
 ```
 
+Example: [forward zone transfer file](./config/primary-dns/tst.hcinfotech.ch.zone.transfer)
+
 Similar for the transfer of the reverse lookup zone
 
 ```bash
-echo "server 10.1.50.32" | sudo tee /etc/bind/10.1.50.1.zone.transfer
-echo "zone 50.1.10.in-addr.arpa" | sudo tee -a /etc/bind/10.1.50.1.zone.transfer
+echo "server 10.1.50.32" | sudo tee /etc/bind/10.1.50.rev.zone.transfer
+echo "zone 50.1.10.in-addr.arpa" | sudo tee -a /etc/bind/10.1.50.rev.zone.transfer
 dig @ns1.tst.hcinfotech.ch +noall +answer 50.1.10.in-addr.arpa -y $HMAC -t AXFR \
 | grep -E $'[\t| ](PTR)[\t| ]' \
 | while read LINE; do \
-    echo "update add ${LINE}" | sudo tee -a /etc/bind/10.1.50.1.zone.transfer \
+    echo "update add ${LINE}" | sudo tee -a /etc/bind/10.1.50.rev.zone.transfer; \
   done
-echo "send" | sudo tee -a /etc/bind/10.1.50.1.zone.transfer
+echo "send" | sudo tee -a /etc/bind/10.1.50.rev.zone.transfer
 ```
 
-Update /etc/bind/named.conf.local on the primary name server and add the following section
-to any zone prepared for dynamical update:
-
-```bash
-update-policy {
- grant ddns-update-key zonesub ANY;
-};
-```
-
-AppArmor prevents named from updating files in /etc/bind. The zone file needs to be stashed in
-directory /var/lib/bind/ in order for it to be updated by named.
-
-Example zone entry in /etc/bind/named.conf.local:
-
-```bash
-zone "tst.hcinfotech.ch" IN {
-  type primary;
-  file "/var/lib/bind/tst.hcinfotech.ch.zone";
-  update-policy {
-    grant ddns-update-key zonesub ANY;
-  };
-};
-```
+Example: [reverse zone transfer file](./config/primary-dns/10.1.50.rev.zone.transfer)
 
 ### 6.2 Create the initial zone files
 
@@ -267,6 +274,8 @@ zone "tst.hcinfotech.ch" IN {
 };
 ```
 
+Example: [primary named.conf.local](./config/primary-dns/named.conf.local)
+
 Restart named
 
 ```bash
@@ -280,7 +289,8 @@ sudo systemctl restart named
 Use nsupdate to create the new zone
 
 ```bash
-nsupdate -y $HMAC ~/tst.hcinfotech.ch.zone.transfer
+nsupdate -y $HMAC /etc/bind/tst.hcinfotech.ch.zone.transfer
+nsupdate -y $HMAC /etc/bind/10.1.50.rev.zone.transfer
 ```
 
 This updates all the records of the file into the new zone. It creates a journal file
@@ -294,19 +304,13 @@ file causes conflicts and inconsistencies.
 
 ### Add a record
 
-update.txt:
-
 ```bash
+nsupdate -y $HMAC
+
 server ns1.tst.hcinfotech.ch
 zone tst.hcinfotech.ch
 update add test.tst.hcinfotech.ch. 3600 IN AAAA 2001:db8::1234
 send
-```
-
-Run:
-
-```bash
-nsupdate -y $HMAC update.txt
 ```
 
 ### Delete a record
@@ -314,16 +318,12 @@ nsupdate -y $HMAC update.txt
 update.txt:
 
 ```bash
+nsupdate -y $HMAC
+
 server ns1.tst.hcinfotech.ch
 zone tst.hcinfotech.ch
 update delete test.tst.hcinfotech.ch. IN AAAA
 send
-```
-
-Run:
-
-```bash
-nsupdate -y $HMAC update.txt
 ```
 
 Verify:
@@ -333,92 +333,11 @@ dig @ns1.tst.hcinfotech.ch test.tst.hcinfotech.ch AAAA
 ```
 
 I'm temporarily using the following API [bind-rest-api](https://gitlab.com/jaytuck/bind-rest-api.git), based on dnspython. It serves as a start,
-but it needs work in part of the capability and with security.
+but it needs work in parts of the capability and with security.
 
 ---
 
-## 9. DNSSEC configuration
-
-DNSSEC (DNS Security Extension) provides cryptographic authentication of DNS information.
-A secure primary zone signs the transferred records, using private/public
-key pairs. The secondary nameservers can therefor verify that the data they receive
-originated at the primary for the zone.
-
-### 9.1 Generating the keys
-
-The zone requires a zone signing key (ZSK), and a key signing key (KSK). dnssec-keygen
-creates both of these keys. Place the keys in the same location as the zone files.
-Here in directory /var/lib/bind/ for dynamically updated zones.
-
-```bash
-sudo -u bind dnssec-keygen -a ECDSAP256SHA256 -n ZONE -K /var/lib/bind/ tst.hcinfotech.ch
-sudo -u bind dnssec-keygen -f KSK -a ECDSAP256SHA256 -n ZONE -K /var/lib/bind/ tst.hcinfotech.ch
-```
-
-Add the public keys contained in files Ktst.hcinfotech.ch.+....key in /var/lib/bind/ to the zone using nsupdate
-
-```bash
-nsupdate -y $HMAC
-> server ns1.tst.hcinfotech.ch
-> zone tst.hcinfotech.ch
-> ttl 3600
-> update add tst.hcinfotech.ch. IN DNSKEY 256 3 13 ab8df9.....a3d2==
-> update add tst.hcinfotech.ch. IN DNSKEY 256 3 13 f6b78d.....a9ef==
-> send
-```
-
-### 9.2 Sign the zone by using dnssec-signzone
-
-```bash
-sudo -u bind dnssec-signzone -3 $(openssl rand -hex 8) -S -A -N INCREMENT -K /var/lib/bind -o tst.hcinfotech.ch. -t tst.hcinfotech.ch.zone
-```
-
-- -3 NSEC3 $(openssl rand -hex 8) creates a 16 character salt
-- -S smartly finds the keys in the specified key directory
-- -o the zone to be signed
-- -t the zone file
-- -A NSEC3 optout
-- -N increment the SOA serial
-
-Signing creates new zone file tst.hcinfotech.ch.zone.signed
-
-Update /etc/bind/named.conf.local and replace statement file "/var/lib/bind/tst.hcinfotech.ch.zone" with
-"/var/lib/bind/tst.hcinfotech.ch.zone.signed"
-
-Validate:
-
-```bash
-sudo -u bind named-checkconf
-sudo -u bind named-checkzone tst.hcinfotech.ch /var/lib/bind/tst.hcinfotech.ch.zone.signed
-```
-
-### 9.3 Update the secondary resolvers with the new trust anchor
-
-KSK public key comprises the trust anchor.
-
-Update /etc/bind/named.conf.options on the secondaries to add the trust anchor
-
-```bash
-...
-options {
-    dnssec-validation yes;
-    ...
-};
-
-trust-anchors {
-    "tst.hcinfotech.ch" static-key 257 3 13 "...the public key...==";
-};
-```
-
-Reload named configuration
-
-```bash
-sudo systemctl reload named
-```
-
----
-
-## 10. Security best practices
+## 9. Security best practices
 
 🔑 Key Management
 

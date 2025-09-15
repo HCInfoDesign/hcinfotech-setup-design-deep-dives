@@ -1,0 +1,25 @@
+//
+// Do any local configuration here
+//
+
+zone "tst.hcinfotech.ch" IN {
+  type secondary;
+  file "/var/lib/bind/tst.hcinfotech.ch.zone";
+  primaries {
+    10.1.50.32;
+  };
+};
+
+// zone file for the reverse lookup
+zone "50.1.10.in-addr.arpa" {
+  type secondary;
+  file "/var/lib/bind/10.1.50.rev.zone";
+  primaries {
+    10.1.50.32;
+  };
+};
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/var/lib/bind/zones.rfc1918";
+
