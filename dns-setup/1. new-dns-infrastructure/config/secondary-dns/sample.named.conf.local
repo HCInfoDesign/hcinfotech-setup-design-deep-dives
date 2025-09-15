@@ -1,0 +1,20 @@
+//
+// Do any local configuration here
+//
+
+zone "tst.hcinfotech.ch" IN {
+    type secondary;
+    file "/var/lib/bind/tst.hcinfotech.ch.zone";
+    primaries { 10.1.50.81; };  # Primary DNS IP
+};
+
+zone "50.1.10.in-addr.arpa" IN {
+    type secondary;
+    file "/var/lib/bind/50.1.10.rev";
+    primaries { 10.1.50.81; };
+};
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+

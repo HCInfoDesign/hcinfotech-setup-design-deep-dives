@@ -1,0 +1,47 @@
+acl internal {
+  10.1.50.0/24;
+};
+
+options {
+	directory "/var/cache/bind";
+
+	// If there is a firewall between you and nameservers you want
+	// to talk to, you may need to fix the firewall to allow multiple
+	// ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+	// If your ISP provided one or more IP addresses for stable 
+	// nameservers, you probably want to use them as forwarders.  
+	// Uncomment the following block, and insert the addresses replacing 
+	// the all-0's placeholder.
+
+	forwarders {
+ 	 8.8.8.8;    # Google DNS
+ 	 1.1.1.1;    # Cloudflare
+	};
+	allow-query { internal; };
+
+
+	allow-notify {
+	  10.1.50.82;  # b100udns2
+	  10.1.50.83;  # b100udns3
+	};
+
+	allow-transfer {
+	  10.1.50.82;
+	  10.1.50.83;
+	};
+
+	//========================================================================
+	// If BIND logs error messages about the root key being expired,
+	// you will need to update your keys.  See https://www.isc.org/bind-keys
+	//========================================================================
+	dnssec-validation yes;
+
+	listen-on-v6 { any; };
+};
+
+trust-anchors {
+  "tst.hcinfotech.ch." static-key 257 3 13 "xYEDG6PLsh110k0RyaoVgq4TRUdGanMVB8XXsp39UsBLmb3xa3uL/4HJ DysPT7PanSrTkn9kF9di8/70O4Znsg==";
+  "50.1.10.in-addr.arpa." static-key 257 3 13 "vFbWIrNCldZUUNbwaFj1+H4rjBc/8Rv2tE998mkv5wOyiE4ejfXRjhLG lqoTYaHSWfiNMgT7zy4A1eCRkED2Bg==";
+};
+

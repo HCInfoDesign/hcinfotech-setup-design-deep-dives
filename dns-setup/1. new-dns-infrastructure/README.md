@@ -64,7 +64,7 @@ include "/etc/bind/ddns-signatures";  # file containing TSIG keys created with t
 
 ```bash
 acl internal {
-  192.168.1.0/24;
+  10.1.50.0/24;
   10.5.20.0/24;
 };
 ...
@@ -91,12 +91,12 @@ forwarders {
 
 ```bash
 allow-notify {
-    192.168.1.35;  # secondary #1
+    10.1.50.35;  # secondary #1
     192.168.5.68;  # secondary #2
   };
 
   allow-transfer {
-    192.168.1.35;
+    10.1.50.35;
     192.168.5.68;
     key ddns-transfer-key;  # include only if TSIG-protected transfers are used
   };
@@ -110,11 +110,11 @@ Example: [named.conf.options](./config/primary-dns/sample.named.conf.options)
 Define authoritative zones
 
 ```bash
-zone "example.com" IN {
+zone "tst.hcinfotech.ch" IN {
   type primary;
-  file "/var/lib/bind/example.com.zone";   # must be in /var/lib/bind if dynamic updates are enabled
+  file "/var/lib/bind/tst.hcinfotech.ch.zone";   # must be in /var/lib/bind if dynamic updates are enabled
   allow-transfer {
-    192.168.1.35;                           # secondary nameservers
+    10.1.50.35;                           # secondary nameservers
     192.168.5.68;
     key ddns-transfer-key;                  # only here if TSIG-protected transfers are configured
   };
@@ -130,7 +130,7 @@ Example: [named.conf.local](./config/primary-dns/sample.named.conf.local)
 
 ```bash
 sudo named-checkconf
-sudo named-checkzone example.com /var/lib/bind/example.com.zone
+sudo named-checkzone tst.hcinfotech.ch /var/lib/bind/tst.hcinfotech.ch.zone
 ```
 
 **Start and verify named service**
@@ -157,7 +157,7 @@ key "ddns-transfer-key" {
   secret "xxxxx...";   # TSIG secret from primary
 };
 
-server 192.168.1.20 {           # IP of primary nameserver
+server 10.1.50.32 {           # IP of primary nameserver
   keys { ddns-transfer-key; };
 };
 ```
@@ -182,7 +182,7 @@ Restrict access and configure forwarders as for the primary:
 
 ```bash
 acl internal {
-  192.168.1.0/24;
+  10.1.50.0/24;
   10.5.20.0/24;
 };
 
@@ -204,11 +204,11 @@ Example: [named.conf.options](./config/secondary-dns/sample.named.conf.options)
 Add zones where this server is secondary:
 
 ```bash
-zone "example.com" IN {
+zone "tst.hcinfotech.ch" IN {
   type secondary;
-  file "/var/lib/bind/example.com.zone";  # must be writable by named, AppArmor restricts /etc/bind
+  file "/var/lib/bind/tst.hcinfotech.ch.zone";  # must be writable by named, AppArmor restricts /etc/bind
   primaries {
-    192.168.1.20;  # IP of primary nameserver
+    10.1.50.32;  # IP of primary nameserver
   };
 };
 ```
@@ -297,7 +297,7 @@ Create /etc/logrotate.d/bind:
 To confirm replication works:
 
 ```bash
-dig @b100udns2 example.com AXFR
+dig @b100udns2 tst.hcinfotech.ch AXFR
 ```
 
 Use the set_HMAC alias to set the TSIG key, if the landscape uses TSIG-transfer.
@@ -322,9 +322,9 @@ Repeat with b100udns3 to verify both secondaries are in sync.
 
 ```bash
 sudo named-checkconf
-sudo named-checkzone example.com /var/lib/bind/example.com.zone
+sudo named-checkzone tst.hcinfotech.ch /var/lib/bind/tst.hcinfotech.ch.zone
 sudo journalctl -fu named
-dig @b100udns1 example.com AXFR -y hmac-sha512:ddns-transfer-key:<base64_secret>
+dig @b100udns1 tst.hcinfotech.ch AXFR -y hmac-sha512:ddns-transfer-key:<base64_secret>
 ```
 
 ---

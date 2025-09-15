@@ -100,13 +100,13 @@ Use the exported variable $HMAC with dig and nsupdate.
 Example zone transfer:
 
 ```bash
-dig @ns1.example.com +noall +answer example.com -y $HMAC -t AXFR \
+dig @ns1.tst.hcinfotech.ch +noall +answer tst.hcinfotech.ch -y $HMAC -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]'
 ```
 
 Explanation:
 
-- Connects to the primary nameserver for zone example.com
+- Connects to the primary nameserver for zone tst.hcinfotech.ch
 - Initiates an authenticated AXFR zone transfer
 - Filters for A, CNAME, and MX records
 
@@ -123,7 +123,7 @@ key "ddns-transfer-key" {
     algorithm hmac-sha512;
     secret "Alongandverysecretassphrase";
 };
-server 192.168.1.20 {   # example ip of primary name server
+server 10.1.50.32 {   # example ip of primary name server
     keys {
         ddns-transfer-key;
     };
@@ -145,49 +145,49 @@ sudo systemctl restart named
 ### 6.1 Prepare the transfer files for the zones
 
 Prepare the files for the transfer by nsupdate ahead of time. The zone resolution
-is unavaialble until nsupdate has updated the zones, after we placed the empty zone stubs
-into /var/lib/bind and restart named.
+is unavailable until nsupdate has updated the zones, after placing the empty zone stubs
+into /var/lib/bind and reloading named configuration.
 
 The transfer files use the following format:
 
 ```bash
-server 192.168.1.20          # IP address of primary name server
-zone example.com             # the zone to be transferred
-update add server1.example.com 3600 IN A 192.168.1.135
+server 10.1.50.32          # IP address of primary name server
+zone tst.hcinfotech.ch             # the zone to be transferred
+update add server1.tst.hcinfotech.ch 3600 IN A 10.1.50.135
 ...
-update add server50.example.com 3600 IN A 192.168.1.211
+update add server50.tst.hcinfotech.ch 3600 IN A 10.1.50.211
 send                         # signal nsupdate to start the transfer
 ```
 
 Transfer of the reverse lookup follows the same format. Zone replaced by the
-reverse lookup zone (e.g. 1.168.192.in-addr.arpa).
+reverse lookup zone (e.g. 50.1.10.in-addr.arpa).
 'update add' command adding the reverse lookup entries
-(e.g. 135.1.168.192.in-addr.arpa 3600 IN PTR xxx.example.com.)
+(e.g. 135.50.1.10.in-addr.arpa 3600 IN PTR xxx.tst.hcinfotech.ch.)
 
 You could use something such as the following scripts to create these files.
 
 ```bash
-echo "server 192.168.1.20" | sudo tee /etc/bind/example.com.zone.transfer
-echo "zone example.com." | sudo tee -a /etc/bind/example.com.zone.transfer
-dig @ns1.example.com +noall +answer example.com -y $HMAC -t AXFR \
+echo "server 10.1.50.32" | sudo tee /etc/bind/tst.hcinfotech.ch.zone.transfer
+echo "zone tst.hcinfotech.ch." | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer
+dig @ns1.tst.hcinfotech.ch +noall +answer tst.hcinfotech.ch -y $HMAC -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]' \
 | while read LINE; do \
-    echo "update add ${LINE}" | sudo tee -a /etc/bind/example.com.zone.transfer \
+    echo "update add ${LINE}" | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer \
   done
-echo "send" | sudo tee -a /etc/bind/example.com.zone.transfer
+echo "send" | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer
 ```
 
 Similar for the transfer of the reverse lookup zone
 
 ```bash
-echo "server 192.168.1.20" | sudo tee /etc/bind/192.168.1.zone.transfer
-echo "zone 1.168.192.in-addr.arpa" | sudo tee -a /etc/bind/192.168.1.zone.transfer
-dig @ns1.example.com +noall +answer 1.168.192.in-addr.arpa -y $HMAC -t AXFR \
+echo "server 10.1.50.32" | sudo tee /etc/bind/10.1.50.zone.transfer
+echo "zone 50.1.10.in-addr.arpa" | sudo tee -a /etc/bind/10.1.50.zone.transfer
+dig @ns1.tst.hcinfotech.ch +noall +answer 50.1.10.in-addr.arpa -y $HMAC -t AXFR \
 | grep -E $'[\t| ](PTR)[\t| ]' \
 | while read LINE; do \
-    echo "update add ${LINE}" | sudo tee -a /etc/bind/192.168.1.zone.transfer \
+    echo "update add ${LINE}" | sudo tee -a /etc/bind/10.1.50.zone.transfer \
   done
-echo "send" | sudo tee -a /etc/bind/192.168.1.zone.transfer
+echo "send" | sudo tee -a /etc/bind/10.1.50.zone.transfer
 ```
 
 Update /etc/bind/named.conf.local on the primary name server and add the following section
@@ -205,9 +205,9 @@ directory /var/lib/bind/ in order for it to be updated by named.
 Example zone entry in /etc/bind/named.conf.local:
 
 ```bash
-zone "example.com" IN {
+zone "tst.hcinfotech.ch" IN {
   type primary;
-  file "/var/lib/bind/example.com.zone";
+  file "/var/lib/bind/tst.hcinfotech.ch.zone";
   update-policy {
     grant ddns-update-key zonesub ANY;
   };
@@ -219,12 +219,12 @@ zone "example.com" IN {
 Create the initial zone file in /var/lib/bind/. The zone file needs to contain the SOA record,
 and the NS records of the name servers. nsupdate loads everything else dynamically.
 
-Example initial zone file /var/lib/bind/example.com.zone:
+Example initial zone file /var/lib/bind/tst.hcinfotech.ch.zone:
 
 ```bash
 $TTL 172800     ; 2 days
-$ORIGIN example.com.
-@                 IN SOA  ns1.example.com. info.example.com. (
+$ORIGIN tst.hcinfotech.ch.
+@                 IN SOA  ns1.tst.hcinfotech.ch. info.tst.hcinfotech.ch. (
                                 2025091000 ; serial
                                 43200      ; refresh (12 hours)
                                 900        ; retry (15 minutes)
@@ -232,10 +232,10 @@ $ORIGIN example.com.
                                 7200       ; minimum (2 hours)
                                 )
 ;NAME       TTL   CLASS   TYPE    Resource Record
-                  IN      NS      ns1.example.com
+                  IN      NS      ns1.tst.hcinfotech.ch
 
 ;Name Servers
-ns1               IN      A       192.168.1.20
+ns1               IN      A       10.1.50.32
 ```
 
 Here increase the serial number to signal the secondary servers to re-transfer the zone.
@@ -258,9 +258,9 @@ directory /var/lib/bind/ in order for it to be updated by named.
 Example zone entry in /etc/bind/named.conf.local:
 
 ```bash
-zone "example.com" IN {
+zone "tst.hcinfotech.ch" IN {
   type primary;
-  file "/var/lib/bind/example.com.zone";
+  file "/var/lib/bind/tst.hcinfotech.ch.zone";
   update-policy {
     grant ddns-update-key zonesub ANY;
   };
@@ -280,11 +280,11 @@ sudo systemctl restart named
 Use nsupdate to create the new zone
 
 ```bash
-nsupdate -y $HMAC ~/example.com.zone.transfer
+nsupdate -y $HMAC ~/tst.hcinfotech.ch.zone.transfer
 ```
 
 This updates all the records of the file into the new zone. It creates a journal file
-example.com.zone.jnl in /var/lib/bind and it notifies all the secondary name servers of
+tst.hcinfotech.ch.zone.jnl in /var/lib/bind and it notifies all the secondary name servers of
 the changed zone.
 
 Manage this zone only with nsupdate, as manually changing the zone
@@ -297,9 +297,9 @@ file causes conflicts and inconsistencies.
 update.txt:
 
 ```bash
-server ns1.example.com
-zone example.com
-update add test.example.com. 3600 IN AAAA 2001:db8::1234
+server ns1.tst.hcinfotech.ch
+zone tst.hcinfotech.ch
+update add test.tst.hcinfotech.ch. 3600 IN AAAA 2001:db8::1234
 send
 ```
 
@@ -314,9 +314,9 @@ nsupdate -y $HMAC update.txt
 update.txt:
 
 ```bash
-server ns1.example.com
-zone example.com
-update delete test.example.com. IN AAAA
+server ns1.tst.hcinfotech.ch
+zone tst.hcinfotech.ch
+update delete test.tst.hcinfotech.ch. IN AAAA
 send
 ```
 
@@ -329,7 +329,7 @@ nsupdate -y $HMAC update.txt
 Verify:
 
 ```bash
-dig @ns1.example.com test.example.com AAAA
+dig @ns1.tst.hcinfotech.ch test.tst.hcinfotech.ch AAAA
 ```
 
 I'm temporarily using the following API [bind-rest-api](https://gitlab.com/jaytuck/bind-rest-api.git), based on dnspython. It serves as a start,
@@ -346,24 +346,24 @@ originated at the primary for the zone.
 
 ### 9.1 Generating the keys
 
-The zone requires a zone signing key (ZSK), and a key signing key (KSK). dssec-keygen
+The zone requires a zone signing key (ZSK), and a key signing key (KSK). dnssec-keygen
 creates both of these keys. Place the keys in the same location as the zone files.
 Here in directory /var/lib/bind/ for dynamically updated zones.
 
 ```bash
-sudo -u bind dnssec-keygen -a ECDSAP256SHA256 -n ZONE -K /var/lib/bind/ example.com
-sudo -u bind dnssec-keygen -f KSK -a ECDSAP256SHA256 -n ZONE -K /var/lib/bind/ example.com
+sudo -u bind dnssec-keygen -a ECDSAP256SHA256 -n ZONE -K /var/lib/bind/ tst.hcinfotech.ch
+sudo -u bind dnssec-keygen -f KSK -a ECDSAP256SHA256 -n ZONE -K /var/lib/bind/ tst.hcinfotech.ch
 ```
 
-Add the public keys contained in files Kexample.com.+....key in /var/lib/bind/ to the zone using nsupdate
+Add the public keys contained in files Ktst.hcinfotech.ch.+....key in /var/lib/bind/ to the zone using nsupdate
 
 ```bash
 nsupdate -y $HMAC
-> server ns1.example.com
-> zone example.com
+> server ns1.tst.hcinfotech.ch
+> zone tst.hcinfotech.ch
 > ttl 3600
-> update add example.com. IN DNSKEY 256 3 13 ab8df9.....a3d2==
-> update add example.com. IN DNSKEY 256 3 13 f6b78d.....a9ef==
+> update add tst.hcinfotech.ch. IN DNSKEY 256 3 13 ab8df9.....a3d2==
+> update add tst.hcinfotech.ch. IN DNSKEY 256 3 13 f6b78d.....a9ef==
 > send
 ```
 
@@ -377,24 +377,24 @@ sudo -u bind dnssec-signzone -3 $(openssl rand -hex 8) -S -A -N INCREMENT -K /va
 - -S smartly finds the keys in the specified key directory
 - -o the zone to be signed
 - -t the zone file
-- -A NSEC3 outout
+- -A NSEC3 optout
 - -N increment the SOA serial
 
-Signing creates new zone file exmaple.com.zone.signed
+Signing creates new zone file tst.hcinfotech.ch.zone.signed
 
-Update /etc/bind/named.conf.local and replace statement file "/var/lib/bind/example.come.zone" with
-"/var/lib/bind/example.com.zone.signed"
+Update /etc/bind/named.conf.local and replace statement file "/var/lib/bind/tst.hcinfotech.ch.zone" with
+"/var/lib/bind/tst.hcinfotech.ch.zone.signed"
 
 Validate:
 
 ```bash
 sudo -u bind named-checkconf
-sudo -u bind named-checkzone example.com /var/lib/bind/example.com.zone.signed
+sudo -u bind named-checkzone tst.hcinfotech.ch /var/lib/bind/tst.hcinfotech.ch.zone.signed
 ```
 
 ### 9.3 Update the secondary resolvers with the new trust anchor
 
-Trust anchor is the public key of the KSK file
+KSK public key comprises the trust anchor.
 
 Update /etc/bind/named.conf.options on the secondaries to add the trust anchor
 
@@ -406,7 +406,7 @@ options {
 };
 
 trust-anchors {
-    "ecample.com" static-key 257 3 13 "...the public key...==";
+    "tst.hcinfotech.ch" static-key 257 3 13 "...the public key...==";
 };
 ```
 
