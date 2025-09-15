@@ -1,0 +1,13 @@
+/var/log/named/*.log {
+  daily
+  rotate 7
+  compress
+  missingok
+  notifempty
+  create 0640 bind bind
+  sharedscripts
+  postrotate
+    systemctl reload named > /dev/null
+  endscript
+}
+

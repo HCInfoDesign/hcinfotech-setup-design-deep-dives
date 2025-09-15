@@ -1,0 +1,29 @@
+$TTL  2d
+$ORIGIN   50.1.10.IN-ADDR.ARPA.
+
+
+@         IN      SOA     ns1.in.hcinfotech.ch  info.hcinfotech.ch. (
+                          2025091500    ; serial
+                          12h           ; refresh
+                          15m           ; retry
+                          3w            ; expire
+                          2h            ; minimum ttl
+                          )
+
+;NAME       TTL   CLASS   TYPE    Resource Record
+                  IN      NS      ns1.in.hcinfotech.ch.
+                  IN      NS      ns2.in.hcinfotech.ch.
+                  IN      NS      ns3.in.hcinfotech.ch.
+                  IN      NS      ns4.in.hcinfotech.ch.
+                  IN      NS      ns5.in.hcinfotech.ch.
+                  IN      NS      ns6.in.hcinfotech.ch.
+
+135 3600 IN PTR tst.hcinfotech.ch.
+225 3600 IN PTR b100caweb1.tst.hcinfotech.ch.
+250 3600 IN PTR b100caweb2.tst.hcinfotech.ch.
+110 3600 IN PTR b100caweb3.tst.hcinfotech.ch.
+63 3600 IN PTR b100ldap.tst.hcinfotech.ch.
+43 3600 IN PTR b100ldap1.tst.hcinfotech.ch.
+116 3600 IN PTR b100ldap2.tst.hcinfotech.ch.
+40 3600 IN PTR b100ldap3.tst.hcinfotech.ch.
+

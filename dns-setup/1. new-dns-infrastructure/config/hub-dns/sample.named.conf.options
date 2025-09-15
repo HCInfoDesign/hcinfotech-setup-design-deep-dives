@@ -19,7 +19,13 @@ options {
     1.1.1.1;  # Cloudflare DNS
   };
 
+  allow-notify {
+    10.1.50.82;  # secondary #1
+    10.1.50.83;  # secondary #1
+  };
+
   allow-transfer {
+    10.1.50.82;  # secondary #1
     10.1.50.83;  # secondary #1
   };
 
