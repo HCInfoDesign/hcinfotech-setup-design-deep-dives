@@ -23,7 +23,7 @@ $ORIGIN tst.hcinfotech.ch.
 ; Name Servers
 ns1               IN      A       10.1.50.32
 ns2               IN      A       10.1.50.33
-ns3               IN      A       10.1.50.81
+ns3               IN      A       10.1.50.34
 ns4               IN      A       10.1.50.81
 ns5               IN      A       10.1.50.82
 ns6               IN      A       10.1.50.83
