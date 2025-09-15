@@ -153,9 +153,9 @@ The transfer files use the following format:
 ```bash
 server 10.1.50.32          # IP address of primary name server
 zone tst.hcinfotech.ch             # the zone to be transferred
-update add server1.tst.hcinfotech.ch 3600 IN A 10.1.50.135
+update add server1.tst.hcinfotech.ch 3600 IN A 10.1.50.1.135
 ...
-update add server50.tst.hcinfotech.ch 3600 IN A 10.1.50.211
+update add server50.tst.hcinfotech.ch 3600 IN A 10.1.50.1.211
 send                         # signal nsupdate to start the transfer
 ```
 
@@ -180,14 +180,14 @@ echo "send" | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer
 Similar for the transfer of the reverse lookup zone
 
 ```bash
-echo "server 10.1.50.32" | sudo tee /etc/bind/10.1.50.zone.transfer
-echo "zone 50.1.10.in-addr.arpa" | sudo tee -a /etc/bind/10.1.50.zone.transfer
+echo "server 10.1.50.32" | sudo tee /etc/bind/10.1.50.1.zone.transfer
+echo "zone 50.1.10.in-addr.arpa" | sudo tee -a /etc/bind/10.1.50.1.zone.transfer
 dig @ns1.tst.hcinfotech.ch +noall +answer 50.1.10.in-addr.arpa -y $HMAC -t AXFR \
 | grep -E $'[\t| ](PTR)[\t| ]' \
 | while read LINE; do \
-    echo "update add ${LINE}" | sudo tee -a /etc/bind/10.1.50.zone.transfer \
+    echo "update add ${LINE}" | sudo tee -a /etc/bind/10.1.50.1.zone.transfer \
   done
-echo "send" | sudo tee -a /etc/bind/10.1.50.zone.transfer
+echo "send" | sudo tee -a /etc/bind/10.1.50.1.zone.transfer
 ```
 
 Update /etc/bind/named.conf.local on the primary name server and add the following section

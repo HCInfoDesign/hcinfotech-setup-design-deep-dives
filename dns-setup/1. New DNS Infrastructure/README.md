@@ -47,7 +47,7 @@ Default configuration directory /etc/bind/
 ## 3. Primary nameserver configuration
 
 The primary server is authoritative for all managed zones. If using dynamic updates or TSIG-protected zone transfers,
-first complete the [dynamic DNS setup](../2.%20reconf-ddns-current-setup/README.md)
+first complete the [dynamic DNS setup](../2.%20Add%20DDNS%20to%20current%20setup/README.md)
 
 **Update** /etc/bind/named.conf
 
