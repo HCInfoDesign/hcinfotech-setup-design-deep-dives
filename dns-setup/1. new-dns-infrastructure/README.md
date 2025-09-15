@@ -47,7 +47,7 @@ Default configuration directory /etc/bind/
 ## 3. Primary nameserver configuration
 
 The primary server is authoritative for all managed zones. If using dynamic updates or TSIG-protected zone transfers,
-first complete the [dynamic DNS setup](../reconf-ddns-current-setup/README.md)
+first complete the [dynamic DNS setup]('../2. reconf-ddns-current-setup/README.md')
 
 **Update** /etc/bind/named.conf
 
@@ -64,8 +64,7 @@ include "/etc/bind/ddns-signatures";  # file containing TSIG keys created with t
 
 ```bash
 acl internal {
-  10.1.50.0/24;
-  10.5.20.0/24;
+  10.0.0.0/8;
 };
 ...
 options {
@@ -91,13 +90,13 @@ forwarders {
 
 ```bash
 allow-notify {
-    10.1.50.35;  # secondary #1
-    192.168.5.68;  # secondary #2
+    ...
+    10.1.50.81;  # secondary #1
   };
 
   allow-transfer {
-    10.1.50.35;
-    192.168.5.68;
+    ...
+    10.1.50.81;  # secondary #1
     key ddns-transfer-key;  # include only if TSIG-protected transfers are used
   };
 };
@@ -113,11 +112,6 @@ Define authoritative zones
 zone "tst.hcinfotech.ch" IN {
   type primary;
   file "/var/lib/bind/tst.hcinfotech.ch.zone";   # must be in /var/lib/bind if dynamic updates are enabled
-  allow-transfer {
-    10.1.50.35;                           # secondary nameservers
-    192.168.5.68;
-    key ddns-transfer-key;                  # only here if TSIG-protected transfers are configured
-  };
   update-policy {                           # only present if dynamic zone updates are configurd
     grant ddns-update-key zonesub ANY;
   };
@@ -182,8 +176,7 @@ Restrict access and configure forwarders as for the primary:
 
 ```bash
 acl internal {
-  10.1.50.0/24;
-  10.5.20.0/24;
+  10.0.0.0/8;
 };
 
 options {
@@ -289,6 +282,8 @@ Create /etc/logrotate.d/bind:
   endscript
 }
 ```
+
+Example: [logrotate.d/bind](./config/sample-logrotate.d-bind)
 
 ---
 
