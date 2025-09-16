@@ -62,7 +62,7 @@ Store keys securely in a password manager or Vault.
 
 Include the TSIG keys in /etc/bind/named.conf:
 
-```bash
+```conf
 include "/etc/bind/ddns-signatures";
 ```
 
@@ -70,7 +70,7 @@ Example: [primary named.conf](./config/primary-dns/named.conf)
 
 Require signed zone transfers in namde.conf.options:
 
-```bash
+```conf
 allow-transfer {
     192.0.2.10;      # example secondary DNS
     key ddns-transfer-key;
@@ -93,7 +93,7 @@ sudo systemctl restart named
 
 Create a shell alias to load credentials without exposing them in the shell history:
 
-```bash
+```code
 alias set_HMAC='read -i "hmac-sha512 " -ep "Encrypt. Algorithm: " HMAC_ALG; \
 read -i "ddns-update-key " -ep "DDNS User: " HMAC_USER; \
 read -sep "DDNS Password: " HMAC_PASSWD; \
@@ -123,7 +123,7 @@ Securely copy file /etc/bind/ddns-signatures to the secondary DNS servers
 
 Add a section indicating the primary name server after the transfer key in file /etc/bind/ddns-signatures
 
-```bash
+```conf
 key "ddns-transfer-key" {
     algorithm hmac-sha512;
     secret "Alongandverysecretassphrase";
@@ -141,7 +141,7 @@ Example: [secondary ddns-signatures file](./config/secondary-dns/ddns-signatures
 
 Update /etc/bind/named.conf to include ddns-signature file.
 
-```bash
+```conf
 ...
 include "/etc/bind/ddns-signaturs";
 ```
@@ -150,7 +150,7 @@ Example: [secondary named.conf](./config/secondary-dns/named.conf)
 
 Add the key to allow-transfer in /etc/bind/named.conf.options
 
-```bash
+```conf
 allow-transfer {
     ...
     key ddns-transfer-key;
@@ -177,7 +177,7 @@ into /var/lib/bind and reloading named configuration.
 
 The transfer files use the following format:
 
-```bash
+```conf
 server 10.1.50.32          # IP address of primary name server
 zone tst.hcinfotech.ch             # the zone to be transferred
 update add server1.tst.hcinfotech.ch 3600 IN A 10.1.50.1.135
@@ -228,7 +228,7 @@ and the NS records of the name servers. nsupdate loads everything else dynamical
 
 Example initial zone file /var/lib/bind/tst.hcinfotech.ch.zone:
 
-```bash
+```conf
 $TTL 172800     ; 2 days
 $ORIGIN tst.hcinfotech.ch.
 @                 IN SOA  ns1.tst.hcinfotech.ch. info.tst.hcinfotech.ch. (
@@ -253,7 +253,7 @@ Create a similar zone file for the reverse lookup.
 Update /etc/bind/named.conf.local on the primary name server and add the following section
 to any zone prepared for dynamical update:
 
-```bash
+```conf
 update-policy {
  grant ddns-update-key zonesub ANY;
 };
@@ -264,7 +264,7 @@ directory /var/lib/bind/ in order for it to be updated by named.
 
 Example zone entry in /etc/bind/named.conf.local:
 
-```bash
+```conf
 zone "tst.hcinfotech.ch" IN {
   type primary;
   file "/var/lib/bind/tst.hcinfotech.ch.zone";
@@ -306,7 +306,9 @@ file causes conflicts and inconsistencies.
 
 ```bash
 nsupdate -y $HMAC
+```
 
+```code
 server ns1.tst.hcinfotech.ch
 zone tst.hcinfotech.ch
 update add test.tst.hcinfotech.ch. 3600 IN AAAA 2001:db8::1234
@@ -319,7 +321,9 @@ update.txt:
 
 ```bash
 nsupdate -y $HMAC
+```
 
+```code
 server ns1.tst.hcinfotech.ch
 zone tst.hcinfotech.ch
 update delete test.tst.hcinfotech.ch. IN AAAA

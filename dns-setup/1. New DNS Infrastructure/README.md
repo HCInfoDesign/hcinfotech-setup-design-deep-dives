@@ -53,7 +53,7 @@ first complete the [dynamic DNS setup](../2.%20Add%20DDNS%20to%20current%20setup
 
 Add an include for the TSIG key file if dynamic updates or TSIG are used:
 
-```bash
+```conf
 ...
 include "/etc/bind/ddns-signatures";  # file containing TSIG keys created with tsig-keygen
 ```
@@ -62,7 +62,7 @@ include "/etc/bind/ddns-signatures";  # file containing TSIG keys created with t
 
 **Restrict access to internal networks**
 
-```bash
+```conf
 acl internal {
   10.0.0.0/8;
 };
@@ -79,7 +79,7 @@ options {
 
 **Configure forwarders**
 
-```bash
+```conf
 forwarders {
     8.8.8.8;  # Google DNS
     1.1.1.1;  # Cloudflare DNS
@@ -88,7 +88,7 @@ forwarders {
 
 **Allow Notifications and Transfers to Secondaries**
 
-```bash
+```conf
 allow-notify {
     ...
     10.1.50.81;  # secondary #1
@@ -108,7 +108,7 @@ Example: [named.conf.options](./config/primary-dns/sample.named.conf.options)
 
 Define authoritative zones
 
-```bash
+```conf
 zone "tst.hcinfotech.ch" IN {
   type primary;
   file "/var/lib/bind/tst.hcinfotech.ch.zone";   # must be in /var/lib/bind if dynamic updates are enabled
@@ -145,7 +145,7 @@ The secondary servers receive zone data from the primary using AXFR transfers.
 
 If TSIG-protected transfers are used:
 
-```bash
+```conf
 key "ddns-transfer-key" {
   algorithm hmac-sha512;
   secret "xxxxx...";   # TSIG secret from primary
@@ -165,7 +165,7 @@ sudo chmod g+r,o-rwx /etc/bind/ddns-signatures
 
 Add include statement to /etc/bind/named.conf:
 
-```bash
+```conf
 ...
 include "/etc/bind/ddns-signatures";
 ...
@@ -174,7 +174,7 @@ include "/etc/bind/ddns-signatures";
 **Update** /etc/bind/named.conf.options
 Restrict access and configure forwarders as for the primary:
 
-```bash
+```conf
 acl internal {
   10.0.0.0/8;
 };
@@ -196,7 +196,7 @@ Example: [named.conf.options](./config/secondary-dns/sample.named.conf.options)
 
 Add zones where this server is secondary:
 
-```bash
+```conf
 zone "tst.hcinfotech.ch" IN {
   type secondary;
   file "/var/lib/bind/tst.hcinfotech.ch.zone";  # must be writable by named, AppArmor restricts /etc/bind
@@ -231,7 +231,7 @@ sudo journalctl -eu named
 **Enable query logging**
 Edit /etc/vind/named.conf.options
 
-```bash
+```conf
 logging {
   channel query_log {
     file "/var/log/named/query.log" versions 3 size 10m;
@@ -268,7 +268,7 @@ For production environments, integrate alerts with Prometheus, Zabbix, or Nagios
 
 Create /etc/logrotate.d/bind:
 
-```bash
+```conf
 /var/log/named/*.log {
   daily
   rotate 7

@@ -191,7 +191,7 @@ Manually re-signing zones and rolling over ZSKs can be error-prone. Automating t
 
 Create a script /usr/local/sbin/dnssec-resign.sh:
 
-```bash
+```code
 #!/bin/bash
 ZONE="$1"
 ZONEFILE="/var/lib/bind/${2}.zone"
