@@ -18,8 +18,13 @@ The next step in your environment could be integrating monitoring (e.g., Prometh
 # Further Reading / References
 
 [BIND 9 Administrator Reference Manual](https://bind9.readthedocs.io/en/v9.16.24/index.html)
+
 [RFC 2845 – Secret Key Transaction Authentication for DNS (TSIG)](https://datatracker.ietf.org/doc/html/rfc2845.html)
+
 [RFC 4033 – DNS Security Introduction and Requirements](https://datatracker.ietf.org/doc/html/rfc4033.html)
+
 [RFC 4034 – Resource Records for DNS Security Extensions](https://datatracker.ietf.org/doc/html/rfc4034.html)
+
 [RFC 4035 – Protocol Modifications for DNSSEC](https://datatracker.ietf.org/doc/html/rfc4035.html)
+
 [ISC Knowledge Base: DNSSEC Guide](https://bind9.readthedocs.io/en/v9.18.0/dnssec-guide.html)
