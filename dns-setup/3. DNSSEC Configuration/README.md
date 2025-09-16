@@ -13,6 +13,8 @@ zone, forme .ch.
 Because this configuration is for an intranet site, I select one of my zones as the
 top level zone and authenticity flows down from that point.
 
+---
+
 ## 1. Generate DNSSEC keys
 
 Create a controlled directory owned by bind to store the keys
@@ -37,6 +39,8 @@ sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n 
 
 - ECDSAP256SHA256 is a common modern algorithm; adjust as needed.
 - The -f KSK flag makes the second key the Key Signing Key (used as root of trust).
+
+---
 
 ## 2. Enable DNSSEC in the zones
 
@@ -91,6 +95,8 @@ trust-anchors {
 ...
 ```
 
+Example: [named.conf.options](./config/primary.named.conf.options)
+
 The resolver validate automatic against these keys because of 'dnssec-validation auto;' in named.conf.options.
 
 ### 2.4 Validation
@@ -123,17 +129,23 @@ dig @ns2.tst.hcinfotech.ch tst.hcinfotech.ch AXFR +noall +answer -y ${HMAC}
 | Transfer denied                     | Missing TSIG key in `allow-transfer` or wrong IP             | Check key names and ACLs                                            |
 | Named fails to start                | Missing signature files, mismatched file names               | Ensure zone file `.signed` referenced, file permissions are correct |
 
+---
+
 ## 3. Automatic re-signing
 
 For dynamic zones consider enabling automatic DNSSEC signing in BIND9 by adding to the zones in named.conf.local:
 
-```code
+```conf
 zone tst.hcinfotech.ch {
     ...
     inline-signing yes;
     ...
 };
 ```
+
+Example: [named.conf.local](./config/primary.named.conf.local)
+
+---
 
 ## 4. Key rollover strategy (ZSK & KSK)
 
@@ -205,6 +217,8 @@ dnssec-signzone -K $KEYDIR -S -o $ZONE -N increment $ZONEFILE
 rndc reload
 ```
 
+Example: [dnssec-resign.sh](./config/dnssec-resign.sh)
+
 Make the script executable:
 
 ```bash
@@ -225,6 +239,8 @@ Add:
 ```
 
 This ensures signatures are refreshed before they expire
+
+---
 
 ## 5. Security best practices
 
