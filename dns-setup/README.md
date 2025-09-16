@@ -16,9 +16,11 @@ minimizing disruption, validating every step, and using automation where possibl
 
 ## 🌐 Current vs. Target Architecture
 
+![Current state](../common/images/current-internal-dns-topology.png)
 **Current State:**  
 _A simple single-zone setup with unencrypted transfers and static zone files._
 
+![Target state](../common/images/target-internal-dns-topology.png)
 **Target State:**  
 _A secure, automated DNS infrastructure with TSIG-protected zone transfers, dynamic updates, and DNSSEC._
 
@@ -46,3 +48,4 @@ By following this series, you can replicate a secure and maintainable DNS setup 
 ---
 
 🔗 **Final Summary**
+See [Summary](./SUMMARY.md) for the high-level overview and lessons learned after completing the migration.
