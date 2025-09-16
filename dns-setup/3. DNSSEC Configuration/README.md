@@ -125,13 +125,13 @@ dig @ns2.tst.hcinfotech.ch tst.hcinfotech.ch AXFR +noall +answer -y ${HMAC}
 
 ## 3. Automatic re-signing
 
-For dynamic zones consider enabling automatic DNSSEC signing in BIND9 by adding:
+For dynamic zones consider enabling automatic DNSSEC signing in BIND9 by adding to the zones in named.conf.local:
 
 ```code
 zone tst.hcinfotech.ch {
-...
-inline-signing yes;
-...
+    ...
+    inline-signing yes;
+    ...
 };
 ```
 
@@ -193,15 +193,16 @@ Create a script /usr/local/sbin/dnssec-resign.sh:
 
 ```bash
 #!/bin/bash
-ZONE="example.com"
-ZONEFILE="/var/lib/bind/${ZONE}.zone"
-KEYDIR="/var/lib/bind"
+ZONE="$1"
+ZONEFILE="/var/lib/bind/${2}.zone"
+KEYDIR="/usr/local/etc/dnssec-keys/"
 
 # Re-sign the zone using the current keys
-dnssec-signzone -K $KEYDIR -o $ZONE -N increment $ZONEFILE
+cd /var/lib/bind/
+dnssec-signzone -K $KEYDIR -S -o $ZONE -N increment $ZONEFILE
 
 # Reload named to apply changes
-rndc reload $ZONE
+rndc reload
 ```
 
 Make the script executable:
@@ -213,45 +214,17 @@ sudo chmod +x /usr/local/sbin/dnssec-resign.sh
 Add a cron job to re-sign the zone daily:
 
 ```bash
-sudo crontab -e
+sudo -u bind crontab -e
 ```
 
 Add:
 
 ```conf
-0 3 * * * /usr/local/sbin/dnssec-resign.sh >/dev/null 2>&1
+0 3 * * * /usr/local/sbin/dnssec-resign.sh tst.hcinfotech.ch tst.hcinfotech.ch >/dev/null 2>&1
+0 3 * * * /usr/local/sbin/dnssec-resign.sh 50.1.10.in-addr.arpa 10.1.50.rev >/dev/null 2>&1
 ```
 
 This ensures signatures are refreshed before they expire
-
-#### 4.3.4 Automating ZSK rollover with dnssec-keymgr
-
-BIND provides dnssec-keymgr to manage key lifecycles automatically.
-
-Example configuration /etc/dnssec-keymgr.conf:
-
-```conf
-policy default {
-    algorithm EDCSAP256SHA256;
-    zsk-lifetime 30d;    # generate a new ZSK every 30 days
-    ksk-lifetime 365d;   # generate a new KSK every year
-    pre-publish 7d;      # pre-publish new keys for at least 7 days
-};
-```
-
-Then run:
-
-```bash
-sudo -u bind dnssec-keymgr -K /var/lib/bind tst.hcinfotech.ch
-```
-
-This generates, publishes, and retires keys based on the policy automatically. Combine this with a cron job to run weekly:
-
-```conf
-0 4 * * 0 dnssec-keymgr -K /var/lib/bind tst.hcinfotech.ch >/dev/null 2>&1
-
-This setup reduces human error and ensures timely rollovers.
-```
 
 ## 5. Security best practices
 
@@ -259,8 +232,8 @@ This setup reduces human error and ensures timely rollovers.
    - Restrict key files (.key, .private) to be readable only by the bind user and group:
 
    ```bash
-    sudo chown root:bind /var/lib/bind/K*
-    sudo chmod 640 /var/lib/bind/K*
+    sudo chown root:bind /usr/local/etc/dnssec-keys/K*
+    sudo chmod 640 /usr/local/etc/dnssec-keys/
    ```
 
    - Ensure /var/lib/bind is not world-readable.

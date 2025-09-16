@@ -1,0 +1,26 @@
+//
+// Do any local configuration here
+//
+
+zone "tst.hcinfotech.ch" IN {
+  type primary;
+  file "/var/lib/bind/tst.hcinfotech.ch.zone.signed";
+  inline-signing yes;
+  update-policy {
+   grant ddns-update-key zonesub ANY;
+  };
+};
+
+// zone file for the reverse lookup
+zone "50.1.10.in-addr.arpa" {
+  type primary;
+  file "/var/lib/bind/10.1.50.rev.zone.signed";
+  inline-signing yes;
+  update-policy {
+   grant ddns-update-key zonesub ANY;
+  };
+};
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
