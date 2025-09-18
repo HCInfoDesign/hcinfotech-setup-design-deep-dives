@@ -1,0 +1,106 @@
+$TTL 2d
+
+$ORIGIN internal.hcinfotech.ch.
+
+@         IN    SOA     ns1.internal.hcinfotech.ch. info.hcinfotech.ch. (
+                        2025091803      ; serial
+                        12h             ; refresh
+                        15m             ; retry
+                        3w              ; expire
+                        2h              ; minimum ttl
+                        )
+
+;NAME       TTL           CLASS   TYPE    Resource Record
+                          IN      NS      ns1.internal.hcinfotech.ch.
+                          IN      NS      ns2.internal.hcinfotech.ch.
+                          IN      NS      ns3.internal.hcinfotech.ch.
+
+; Name Servers
+ns1                       IN      A       10.1.50.32
+ns2                       IN      A       10.1.50.33
+ns3                       IN      A       10.1.50.34
+
+; Delegation for child zone
+a.internal.hcinfotech.ch.      IN      NS      ns4.a.internal.hcinfotech.ch.
+a.internal.hcinfotech.ch.      IN      NS      ns5.a.internal.hcinfotech.ch.
+a.internal.hcinfotech.ch.      IN      NS      ns6.a.internal.hcinfotech.ch.
+
+; Glue records for in-zone nameservers
+ns4.a.internal.hcinfotech.ch.  IN      A       10.1.51.81
+ns5.a.internal.hcinfotech.ch.  IN      A       10.1.51.82
+ns6.a.internal.hcinfotech.ch.  IN      A       10.1.51.83
+
+@  3600 IN A 10.1.50.135
+b100caweb1 3600 IN A 10.1.50.225
+b100caweb2 3600 IN A 10.1.50.250
+b100caweb3 3600 IN A 10.1.50.110
+b100ldap 3600 IN A 10.1.50.63
+b100ldap1 3600 IN A 10.1.50.43
+b100ldap2 3600 IN A 10.1.50.116
+b100ldap3 3600 IN A 10.1.50.40
+b100ldap4 3600 IN A 10.1.50.17
+b100mail1 3600 IN A 10.1.50.166
+b100mail2 3600 IN A 10.1.50.35
+b100pggrf-lb 3600 IN A 10.1.50.111
+b100pggrf1 3600 IN A 10.1.50.111
+b100pggrf2 3600 IN A 10.1.50.12
+b100pggrf3 3600 IN A 10.1.50.15
+b100pggrf4 3600 IN A 10.1.50.221
+b100pggrf5 3600 IN A 10.1.50.237
+b100strg1 3600 IN A 10.1.50.41
+b100swrep1 3600 IN A 10.1.50.201
+b100swrep2 3600 IN A 10.1.50.57
+b100tnas1 3600 IN A 10.1.50.242
+b100tnas2 3600 IN A 10.1.50.172
+b100u001 3600 IN A 10.1.50.237
+b100u002 3600 IN A 10.1.50.32
+b100u003 3600 IN A 10.1.50.33
+b100u004 3600 IN A 10.1.50.34
+b100u005 3600 IN A 10.1.50.118
+b100u006 3600 IN A 10.1.50.172
+b100u010 3600 IN A 10.1.50.17
+b100u011 3600 IN A 10.1.50.160
+b100u012 3600 IN A 10.1.50.184
+b100u013 3600 IN A 10.1.50.217
+b100u014 3600 IN A 10.1.50.25
+b100u015 3600 IN A 10.1.50.60
+b100u016 3600 IN A 10.1.50.143
+b100u017 3600 IN A 10.1.50.231
+b100u018 3600 IN A 10.1.50.237
+b100u800 3600 IN A 10.1.50.184
+b100udsk 3600 IN A 10.1.50.35
+b100umon1 3600 IN A 10.1.50.176
+b100umon2 3600 IN A 10.1.50.68
+b100umon3 3600 IN A 10.1.50.108
+b100umon4 3600 IN A 10.1.50.115
+b100upbs1 3600 IN A 10.1.50.124
+b100upbs2 3600 IN A 10.1.50.143
+b100uprt 3600 IN A 10.1.50.192
+b100utmp 3600 IN A 10.1.50.122
+b100utmp1 3600 IN A 10.1.50.183
+b100utmp2 3600 IN A 10.1.50.163
+b100utmp3 3600 IN A 10.1.50.136
+crl-server 3600 IN A 10.1.50.228
+grafana 3600 IN A 10.1.50.125
+HPBF7ABB 3600 IN A 10.1.50.170
+influxdb 3600 IN A 10.1.50.187
+kubelb 3600 IN A 10.1.50.135
+kubevip 3600 IN A 10.1.50.111
+loki 3600 IN A 10.1.50.149
+monitor 3600 IN A 10.1.50.212
+ns1 3600 IN A 10.1.50.32
+ns2 3600 IN A 10.1.50.33
+ns3 3600 IN A 10.1.50.34
+ocsp 3600 IN A 10.1.50.132
+opnsense 3600 IN A 10.1.50.57
+opnsense1 3600 IN A 10.1.50.217
+opnsense2 3600 IN A 10.1.50.102
+prometheus 3600 IN A 10.1.50.183
+prxsrv1 3600 IN A 10.1.50.43
+prxsrv2 3600 IN A 10.1.50.89
+prxsrv2-ilo 3600 IN A 10.1.50.163
+prxsrv3 3600 IN A 10.1.50.181
+prxsrv3-ilo 3600 IN A 10.1.50.159
+prxsrv4 3600 IN A 10.1.50.203
+prxsrv4-ilo 3600 IN A 10.1.50.68
+testlb 3600 IN A 10.1.50.63

@@ -1,5 +1,5 @@
 acl internal {
-  10.1.50.0/24;
+  10.0.0.0/8;
 };
 
 options {
@@ -14,33 +14,16 @@ options {
         // Uncomment the following block, and insert the addresses replacing
         // the all-0's placeholder.
 
-  forwarders {
-    8.8.8.8;  # Google DNS
-    1.1.1.1;  # Cloudflare DNS
-  };
-
-  allow-transfer {
-    10.1.50.83;  # secondary #1
-  };
-
-  allow-query { internal; };
-  recursion yes;
-  notify yes;
-
         //========================================================================
         // If BIND logs error messages about the root key being expired,
         // you will need to update your keys.  See https://www.isc.org/bind-keys
         //========================================================================
+
+  // important else revers lookup will not be forwarded internally
+  empty-zones-enable no;
+
+
         dnssec-validation auto;
 
         listen-on-v6 { any; };
-};
-
-logging {
-  channel query_log {
-    file "/var/log/named/query.log" versions 3 size 10m;
-    severity info;
-    print-time yes;
-  };
-  category queries { query_log; };
 };

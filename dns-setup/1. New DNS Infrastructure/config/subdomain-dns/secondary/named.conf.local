@@ -2,19 +2,20 @@
 // Do any local configuration here
 //
 
-zone "tst.hcinfotech.ch" IN {
+zone "a.internal.hcinfotech.ch" IN {
   type secondary;
-  file "/var/lib/bind/tst.hcinfotech.ch.zone";
+  file "/var/lib/bind/a.internal.hcinfotech.ch.zone";
   primaries {
-    10.1.50.32;
+    10.1.51.81;
   };
 };
 
-zone "50.1.10.in-sddr.arpa" IN {
+// zone file for the reverse lookup
+zone "51.1.10.in-addr.arpa" {
   type secondary;
-  file "/var/lib/bind/10.1.50.rev.zone";
+  file "/var/lib/bind/51.1.10.in-addr.arpa.zone";
   primaries {
-    10.1.50.32;
+    10.1.51.81;
   };
 };
 

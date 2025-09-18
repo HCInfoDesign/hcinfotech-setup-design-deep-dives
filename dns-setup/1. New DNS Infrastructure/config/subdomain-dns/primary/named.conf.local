@@ -2,15 +2,15 @@
 // Do any local configuration here
 //
 
-zone "tst.hcinfotech.ch" IN {
+zone "a.internal.hcinfotech.ch" IN {
   type primary;
-  file "/etc/bind/tst.hcinfotech.ch.zone";
+  file "/etc/bind/a.internal.hcinfotech.ch.zone";
 };
 
 // zone file for the reverse lookup
-zone "50.1.10.in-addr.arpa" {
+zone "51.1.10.in-addr.arpa" {
   type primary;
-  file "/etc/bind/10.1.50.rev.zone";
+  file "/etc/bind/51.1.10.in-addr.arpa.zone";
 };
 
 // Consider adding the 1918 zones here, if they are not used in your
