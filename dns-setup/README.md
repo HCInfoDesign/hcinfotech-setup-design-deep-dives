@@ -14,7 +14,33 @@ minimizing disruption, validating every step, and using automation where possibl
 
 ---
 
-## 🌐 Current vs. Target Architecture
+## Network restructuring - current vs. target state
+
+This repository documents the reconfiguration of a Proxmox-based lab network to simulate a cloud-provider-like environment.
+The first step comprises enabling secure Dynamic DNS by using TSIG keys for authenticated zone transfers and updates.
+
+### Current setup
+
+- 3-node Proxmox cluster (HP Proliant DL360 Gen8)
+- 1 standalone Proxmox node simulating a distant region
+- Unmanaged switch, bonded NIC pairs
+- IPv4 only
+
+![Current netowrk diagram](../common/images/network-current-diagram.png)
+
+### Target setup
+
+- Same Proxmox nodes
+- Managed switches with VLAN support
+- OPNSense router/firewall for VLAN separation and routing
+- IPv6 for internal addressing
+- Dynamic DNS with TSIG authentication
+
+![Target network diagram](../common/images/network-to-be-diagram.png)
+
+---
+
+## 🌐 Current vs. target architecture
 
 ![Current state](../common/images/current-internal-dns-topology.png)
 **Current State:**  

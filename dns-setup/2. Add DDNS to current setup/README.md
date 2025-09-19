@@ -2,37 +2,7 @@
 
 # Network Reconfiguration: Dynamic DNS and TSIG
 
-This repository documents the reconfiguration of a Proxmox-based lab network to simulate a cloud-provider-like environment.  
-The first step comprises enabling **secure Dynamic DNS** by using **TSIG keys** for authenticated zone transfers and updates.
-
----
-
-## 1. Current compared to target configuration
-
-### Current setup
-
-- 3-node Proxmox cluster (HP Proliant DL360 Gen8)
-- 1 standalone Proxmox node simulating a distant region
-- Unmanaged switch, bonded NIC pairs
-- IPv4 only
-
-![Current Network](../../common/images/network-current-diagram.png)
-
----
-
-### Target setup
-
-- Same Proxmox nodes
-- Managed switches with VLAN support
-- OPNSense router/firewall for VLAN separation and routing
-- IPv6 for internal addressing
-- Dynamic DNS with TSIG authentication
-
-![Target Network](../../common/images/network-to-be-diagram.png)
-
----
-
-## 2. Dynamic DNS setup
+## 1. Dynamic DNS setup
 
 ### Generate TSIG keys
 
@@ -58,7 +28,7 @@ Store keys securely in a password manager or Vault.
 
 ## Example: [Primary ddns-signatures file](./config/primary-dns/ddns-signatures)
 
-## 3. Configure bind
+## 2. Configure bind
 
 Include the TSIG keys in /etc/bind/named.conf:
 
@@ -72,7 +42,7 @@ Require signed zone transfers in namde.conf.options:
 
 ```conf
 allow-transfer {
-    192.0.2.10;      # example secondary DNS
+    10.1.51.82;      # example secondary DNS
     key ddns-transfer-key;
 };
 ```
@@ -89,7 +59,7 @@ sudo systemctl restart named
 
 ---
 
-## 4. Zone Transfers with dig
+## 3. Zone Transfers with dig
 
 Create a shell alias to load credentials without exposing them in the shell history:
 
@@ -105,19 +75,19 @@ Use the exported variable $HMAC with dig and nsupdate.
 Example zone transfer:
 
 ```bash
-dig @ns1.tst.hcinfotech.ch +noall +answer tst.hcinfotech.ch -y $HMAC -t AXFR \
+dig @ns1.a.internal.hcinfotech.ch +noall +answer a.internal.hcinfotech.ch -y $HMAC -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]'
 ```
 
 Explanation:
 
-- Connects to the primary nameserver for zone tst.hcinfotech.ch
+- Connects to the primary nameserver for zone a.internal.hcinfotech.ch
 - Initiates an authenticated AXFR zone transfer
 - Filters for A, CNAME, and MX records
 
 ---
 
-## 5. Configure the secondary name servers to use the same key for transfers
+## 4. Configure the secondary name servers to use the same key for transfers
 
 Securely copy file /etc/bind/ddns-signatures to the secondary DNS servers
 
@@ -128,7 +98,7 @@ key "ddns-transfer-key" {
     algorithm hmac-sha512;
     secret "Alongandverysecretassphrase";
 };
-server 10.1.50.32 {   # example ip of primary name server
+server 10.1.51.81 {   # example ip of primary name server
     keys {
         ddns-transfer-key;
     };
@@ -167,9 +137,9 @@ sudo systemctl restart named
 
 ---
 
-## 6. Configure the primary nameserver for dynamic updates
+## 5. Configure the primary nameserver for dynamic updates
 
-### 6.1 Prepare the transfer files for the zones
+### 5.1 Prepare the transfer files for the zones
 
 Prepare the files for the transfer by nsupdate ahead of time. The zone resolution
 is unavailable until nsupdate has updated the zones, after placing the empty zone stubs
@@ -178,30 +148,30 @@ into /var/lib/bind and reloading named configuration.
 The transfer files use the following format:
 
 ```conf
-server 10.1.50.32          # IP address of primary name server
-zone tst.hcinfotech.ch             # the zone to be transferred
-update add server1.tst.hcinfotech.ch 3600 IN A 10.1.50.1.135
+server 10.1.51.81                         # IP address of primary name server
+zone a.internal.hcinfotech.ch             # the zone to be transferred
+update add server1.a.internal.hcinfotech.ch 3600 IN A 10.1.51.138
 ...
-update add server50.tst.hcinfotech.ch 3600 IN A 10.1.50.1.211
+update add server51.a.internal.hcinfotech.ch 3600 IN A 10.1.51.211
 send                         # signal nsupdate to start the transfer
 ```
 
 Transfer of the reverse lookup follows the same format. Zone replaced by the
-reverse lookup zone (e.g. 50.1.10.in-addr.arpa).
+reverse lookup zone (e.g. 51.1.10.in-addr.arpa).
 'update add' command adding the reverse lookup entries
-(e.g. 135.50.1.10.in-addr.arpa 3600 IN PTR xxx.tst.hcinfotech.ch.)
+(e.g. 135.51.1.10.in-addr.arpa 3600 IN PTR server1.a.internal.hcinfotech.ch.)
 
 You could use something such as the following scripts to create these files.
 
 ```bash
-echo "server 10.1.50.32" | sudo tee /etc/bind/tst.hcinfotech.ch.zone.transfer
-echo "zone tst.hcinfotech.ch." | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer
-dig @ns1.tst.hcinfotech.ch +noall +answer tst.hcinfotech.ch -y $HMAC -t AXFR \
+echo "server 10.1.51.81" | sudo tee /etc/bind/a.internal.hcinfotech.ch.zone.transfer
+echo "zone a.internal.hcinfotech.ch." | sudo tee -a /etc/bind/a.internal.hcinfotech.ch.zone.transfer
+dig @ns1.a.internal.hcinfotech.ch +noall +answer a.internal.hcinfotech.ch -y $HMAC -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]' \
 | while read LINE; do \
-    echo "update add ${LINE}" | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer; \
+    echo "update add ${LINE}" | sudo tee -a /etc/bind/a.internal.hcinfotech.ch.zone.transfer; \
   done
-echo "send" | sudo tee -a /etc/bind/tst.hcinfotech.ch.zone.transfer
+echo "send" | sudo tee -a /etc/bind/a.internal.hcinfotech.ch.zone.transfer
 ```
 
 Example: [forward zone transfer file](./config/primary-dns/tst.hcinfotech.ch.zone.transfer)
@@ -209,19 +179,19 @@ Example: [forward zone transfer file](./config/primary-dns/tst.hcinfotech.ch.zon
 Similar for the transfer of the reverse lookup zone
 
 ```bash
-echo "server 10.1.50.32" | sudo tee /etc/bind/10.1.50.rev.zone.transfer
-echo "zone 50.1.10.in-addr.arpa" | sudo tee -a /etc/bind/10.1.50.rev.zone.transfer
-dig @ns1.tst.hcinfotech.ch +noall +answer 50.1.10.in-addr.arpa -y $HMAC -t AXFR \
+echo "server 10.1.51.81" | sudo tee /etc/bind/51.1.10.in-addr.arpa.zone.transfer
+echo "zone 51.1.10.in-addr.arpa" | sudo tee -a /etc/bind/51.1.10.in-addr.arpa.zone.transfer
+dig @ns1.a.internal.hcinfotech.ch +noall +answer 51.1.10.in-addr.arpa -y $HMAC -t AXFR \
 | grep -E $'[\t| ](PTR)[\t| ]' \
 | while read LINE; do \
-    echo "update add ${LINE}" | sudo tee -a /etc/bind/10.1.50.rev.zone.transfer; \
+    echo "update add ${LINE}" | sudo tee -a /etc/bind/51.1.10.in-addr.arpa.zone.transfer; \
   done
-echo "send" | sudo tee -a /etc/bind/10.1.50.rev.zone.transfer
+echo "send" | sudo tee -a /etc/bind/51.1.10.in-addr.arpa.zone.transfer
 ```
 
 Example: [reverse zone transfer file](./config/primary-dns/10.1.50.rev.zone.transfer)
 
-### 6.2 Create the initial zone files
+### 5.2 Create the initial zone files
 
 Create the initial zone file in /var/lib/bind/. The zone file needs to contain the SOA record,
 and the NS records of the name servers. nsupdate loads everything else dynamically.
@@ -230,8 +200,8 @@ Example initial zone file /var/lib/bind/tst.hcinfotech.ch.zone:
 
 ```conf
 $TTL 172800     ; 2 days
-$ORIGIN tst.hcinfotech.ch.
-@                 IN SOA  ns1.tst.hcinfotech.ch. info.tst.hcinfotech.ch. (
+$ORIGIN a.internal.hcinfotech.ch.
+@                 IN SOA  ns1.a.internal.hcinfotech.ch. info.internal.hcinfotech.ch. (
                                 2025091000 ; serial
                                 43200      ; refresh (12 hours)
                                 900        ; retry (15 minutes)
@@ -239,23 +209,27 @@ $ORIGIN tst.hcinfotech.ch.
                                 7200       ; minimum (2 hours)
                                 )
 ;NAME       TTL   CLASS   TYPE    Resource Record
-                  IN      NS      ns1.tst.hcinfotech.ch
+                  IN      NS      ns1.a.internal.hcinfotech.ch
+                  IN      NS      ns2.a.internal.hcinfotech.ch
+                  IN      NS      ns3.a.internal.hcinfotech.ch
 
 ;Name Servers
-ns1               IN      A       10.1.50.32
+ns1               IN      A       10.1.51.81
+ns2               IN      A       10.1.51.82
+ns3               IN      A       10.1.51.83
 ```
 
 Here increase the serial number to signal the secondary servers to re-transfer the zone.
 Create a similar zone file for the reverse lookup.
 
-### 6.3 Change the configuration in /etc/bind/named.conf.local
+### 5.3 Change the configuration in /etc/bind/named.conf.local
 
 Update /etc/bind/named.conf.local on the primary name server and add the following section
 to any zone prepared for dynamical update:
 
 ```conf
 update-policy {
- grant ddns-update-key zonesub ANY;
+  grant ddns-update-key zonesub ANY;
 };
 ```
 
@@ -265,9 +239,9 @@ directory /var/lib/bind/ in order for it to be updated by named.
 Example zone entry in /etc/bind/named.conf.local:
 
 ```conf
-zone "tst.hcinfotech.ch" IN {
+zone "a.internal.hcinfotech.ch" IN {
   type primary;
-  file "/var/lib/bind/tst.hcinfotech.ch.zone";
+  file "/var/lib/bind/a.internal.hcinfotech.ch.zone";
   update-policy {
     grant ddns-update-key zonesub ANY;
   };
@@ -284,23 +258,23 @@ sudo systemctl restart named
 
 ---
 
-## 7. Transfer the currently existing zone to the new dynamic zone
+## 6. Transfer the currently existing zone to the new dynamic zone
 
 Use nsupdate to create the new zone
 
 ```bash
-nsupdate -y $HMAC /etc/bind/tst.hcinfotech.ch.zone.transfer
-nsupdate -y $HMAC /etc/bind/10.1.50.rev.zone.transfer
+nsupdate -y $HMAC /etc/bind/a.internal.hcinfotech.ch.zone.transfer
+nsupdate -y $HMAC /etc/bind/51.1.10.in-addr.arpa.zone.transfer
 ```
 
 This updates all the records of the file into the new zone. It creates a journal file
-tst.hcinfotech.ch.zone.jnl in /var/lib/bind and it notifies all the secondary name servers of
+a.internal.hcinfotech.ch.zone.jnl in /var/lib/bind and it notifies all the secondary name servers of
 the changed zone.
 
 Manage this zone only with nsupdate, as manually changing the zone
 file causes conflicts and inconsistencies.
 
-## 8. Dynamic updates with nsupdate
+## 7. Dynamic updates with nsupdate
 
 ### Add a record
 
@@ -309,9 +283,9 @@ nsupdate -y $HMAC
 ```
 
 ```code
-server ns1.tst.hcinfotech.ch
-zone tst.hcinfotech.ch
-update add test.tst.hcinfotech.ch. 3600 IN AAAA 2001:db8::1234
+server ns1.a.internal.hcinfotech.ch
+zone a.internal.hcinfotech.ch
+update add test.a.internal.hcinfotech.ch. 3600 IN AAAA 2001:db8::1234
 send
 ```
 
@@ -324,16 +298,16 @@ nsupdate -y $HMAC
 ```
 
 ```code
-server ns1.tst.hcinfotech.ch
-zone tst.hcinfotech.ch
-update delete test.tst.hcinfotech.ch. IN AAAA
+server ns1.a.internal.hcinfotech.ch
+zone a.internal.hcinfotech.ch
+update delete test.a.internal.hcinfotech.ch. IN AAAA
 send
 ```
 
 Verify:
 
 ```bash
-dig @ns1.tst.hcinfotech.ch test.tst.hcinfotech.ch AAAA
+dig @ns1.a.internal.hcinfotech.ch test.a.internal.hcinfotech.ch AAAA
 ```
 
 I'm temporarily using the following API [bind-rest-api](https://gitlab.com/jaytuck/bind-rest-api.git), based on dnspython. It serves as a start,
@@ -341,7 +315,7 @@ but it needs work in parts of the capability and with security.
 
 ---
 
-## 9. Security best practices
+## 8. Security best practices
 
 🔑 Key Management
 
@@ -374,7 +348,7 @@ but it needs work in parts of the capability and with security.
 
 ---
 
-## 11. Next steps
+## 9. Next steps
 
 This Dynamic DNS configuration is the foundation for broader reconfiguration:
 
