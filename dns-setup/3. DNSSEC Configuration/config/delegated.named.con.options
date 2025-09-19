@@ -11,6 +11,13 @@ logging {
   category queries { query_log; };
 };
 
+dnssec-policy "a.internal-policy" {
+    keys {
+        ksk lifetime 360d algorithm ecdsap256sha256; // KSK lifetime of 1 year
+        zsk lifetime 30d algorithm ecdsap256sha256; // ZSK lifetime of 30 days
+    };
+};
+
 options {
         directory "/var/cache/bind";
 
@@ -23,8 +30,16 @@ options {
         // Uncomment the following block, and insert the addresses replacing
         // the all-0's placeholder.
 
-  allow-transfer {
+  allow-notify {
+    10.1.51.81;  # primary
     10.1.51.82;  # secondary #1
+    10.1.51.83;  # secondary #2
+  };
+
+  allow-transfer {
+    10.1.51.81;  # primary
+    10.1.51.82;  # secondary #1
+    10.1.51.83;  # secondary #2
     key ddns-transfer-key;
   };
 

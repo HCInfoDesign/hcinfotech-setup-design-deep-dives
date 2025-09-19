@@ -1,48 +1,5 @@
 acl internal {
-  192.168.0.0/24;
   10.0.0.0/8;
-};
-
-options {
-	directory "/var/cache/bind";
-
-	// If there is a firewall between you and nameservers you want
-	// to talk to, you may need to fix the firewall to allow multiple
-	// ports to talk.  See http://www.kb.cert.org/vuls/id/800113
-
-	// If your ISP provided one or more IP addresses for stable 
-	// nameservers, you probably want to use them as forwarders.  
-	// Uncomment the following block, and insert the addresses replacing 
-	// the all-0's placeholder.
-
-	forwarders {
-	 	8.8.8.8;
-	 	8.8.4.4;
-	};
-  allow-query { internal; };
-  allow-notify {
-    10.1.50.33;
-    10.1.50.34;
-    10.1.50.81;
-  };
-  allow-transfer {
-    10.1.50.33;
-    10.1.50.34;
-    10.1.50.81;
-    10.1.50.82;
-    10.1.50.83;
-    key ddns-transfer-key;
-  };
-  notify yes;
-  recursion yes;
-
-	//========================================================================
-	// If BIND logs error messages about the root key being expired,
-	// you will need to update your keys.  See https://www.isc.org/bind-keys
-	//========================================================================
-	dnssec-validation auto;
-
-	listen-on-v6 { any; };
 };
 
 logging {
@@ -54,3 +11,40 @@ logging {
   category queries { query_log; };
 };
 
+options {
+        directory "/var/cache/bind";
+
+        // If there is a firewall between you and nameservers you want
+        // to talk to, you may need to fix the firewall to allow multiple
+        // ports to talk.  See http://www.kb.cert.org/vuls/id/800113
+
+        // If your ISP provided one or more IP addresses for stable
+        // nameservers, you probably want to use them as forwarders.
+        // Uncomment the following block, and insert the addresses replacing
+        // the all-0's placeholder.
+
+  allow-notify {
+    10.1.51.81;  # primary
+    10.1.51.82;  # secondary #1
+    10.1.51.83;  # secondary #2
+  };
+
+  allow-transfer {
+    10.1.51.81;  # primary
+    10.1.51.82;  # secondary #1
+    10.1.51.83;  # secondary #2
+    key ddns-transfer-key;
+  };
+
+  allow-query { internal; };
+  recursion yes;
+  notify yes;
+
+        //========================================================================
+        // If BIND logs error messages about the root key being expired,
+        // you will need to update your keys.  See https://www.isc.org/bind-keys
+        //========================================================================
+        dnssec-validation auto;
+
+        listen-on-v6 { any; };
+};

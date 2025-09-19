@@ -1,0 +1,11 @@
+server 10.1.51.81
+zone a.internal.hcinfotech.ch.
+update add a.internal.hcinfotech.ch. 3600       IN      A       10.1.51.135
+update add b100u013.a.internal.hcinfotech.ch. 3600      IN A    10.1.51.45
+update add b100udns1.a.internal.hcinfotech.ch. 3600 IN A        10.1.51.81
+update add b100udns2.a.internal.hcinfotech.ch. 3600 IN A        10.1.51.82
+update add b100udns3.a.internal.hcinfotech.ch. 3600 IN A        10.1.51.83
+update add ns4.a.internal.hcinfotech.ch. 172800 IN      A       10.1.51.81
+update add ns5.a.internal.hcinfotech.ch. 172800 IN      A       10.1.51.82
+update add ns6.a.internal.hcinfotech.ch. 172800 IN      A       10.1.51.83
+send

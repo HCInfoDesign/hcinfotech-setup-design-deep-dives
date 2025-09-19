@@ -1,9 +1,0 @@
-server 10.1.50.32
-zone 50.1.10.in-addr.arpa
-update add 102.50.1.10.IN-ADDR.ARPA. 3600	IN	PTR	opnsense2.tst.hcinfotech.ch.
-update add 108.50.1.10.IN-ADDR.ARPA. 3600	IN	PTR	b100umon3.tst.hcinfotech.ch.
-update add 110.50.1.10.IN-ADDR.ARPA. 3600	IN	PTR	b100caweb3.tst.hcinfotech.ch.
-update add 83.50.1.10.IN-ADDR.ARPA. 3600	IN	PTR	b100udns3.tst.hcinfotech.ch.
-...
-update add 89.50.1.10.IN-ADDR.ARPA. 3600	IN	PTR	prxsrv2.tst.hcinfotech.ch.
-send

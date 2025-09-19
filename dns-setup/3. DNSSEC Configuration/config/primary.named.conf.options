@@ -14,48 +14,29 @@ options {
         // Uncomment the following block, and insert the addresses replacing
         // the all-0's placeholder.
 
-        forwarders {
-                8.8.8.8;
-                8.8.4.4;
-        };
-  allow-query { internal; };
-  allow-notify {
-    10.1.50.33;
-    10.1.50.34;
-    10.1.50.81;
-  };
-  allow-transfer {
-    10.1.50.33;
-    10.1.50.34;
-    10.1.50.81;
-    10.1.50.82;
-    10.1.50.83;
-    key ddns-transfer-key;
-  };
-  notify yes;
-  recursion yes;
-
         //========================================================================
         // If BIND logs error messages about the root key being expired,
         // you will need to update your keys.  See https://www.isc.org/bind-keys
         //========================================================================
+
+  // important else revers lookup will not be forwarded internally
+  empty-zones-enable no;
+
+
         dnssec-validation auto;
 
         listen-on-v6 { any; };
 };
 
 trust-anchors {
-  "tst.hcinfotech.ch." initial-key 257 3 13 "v/rp5d8ciyhxNK85lWrOi/UbZyua4HKrB54NUkz2mlKX53MaaoO82nNo g2CDShOK5u6tbMft7k9DGw5hoeadTA==";
-  "50.1.10.in-addr.arpa." initial-key 257 3 13 "NU4johWLFUTWx3gllXFnx2+60HxACPKaiyyqOzTFMcK4Lne/9WhDiYd0 6PhH2VM1+oM8xGQoJReBVb/ErQ1o6Q==";
+  "internal.hcinfotech.ch." initial-key 257 3 13 "BmN9/IcrfqFi0mix5Vik1KthWsRqXbAT/r+++MNGylxNcpqsUBunj46YmFBP3Gz1hMfz69pRM4mBmKafgRNOHw==";
+  "50.1.10.in-addr.arpa." initial-key 257 3 13 "zikEMssLEgmA9jTFuxegYVkF9XvWhV9oOR541ZSif/J7mBXsJqHPruQG W2ZldsUINAtAXpGuh21HpwyK1Z0jSw==";
 };
 
-
-logging {
-  channel query_log {
-    file "/var/log/named/query.log" versions 3 size 10m;
-    severity info;
-    print-time yes;
-  };
-  category queries { query_log; };
+dnssec-policy "internal-policy" {
+    keys {
+        ksk lifetime 360d algorithm ecdsap256sha256; // KSK lifetime of 1 year
+        zsk lifetime 30d algorithm ecdsap256sha256; // ZSK lifetime of 30 days
+    };
 };
 

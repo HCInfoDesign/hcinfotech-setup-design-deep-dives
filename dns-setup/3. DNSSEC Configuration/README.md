@@ -31,8 +31,8 @@ key pairs for each zone, ZSK (<u>Z</u>one <u>S</u>igning <u>K</u>ey) and KSK (<u
 
 ```bash
 cd /usr/local/etc/dnssec-keys
-sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE tst.hcinfotech.ch
-sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -f KSK -a ECDSAP256SHA256 -n ZONE tst.hcinfotech.ch
+sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
+sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -f KSK -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
 sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
 sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
 ```
@@ -44,11 +44,37 @@ sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n 
 
 ## 2. Enable DNSSEC in the zones
 
-### 2.1 Sign the zones with the generated keys
+### 2.1 Define the dnssec-policy
+
+In /etc/bind/named.conf.options:
+
+```conf
+...
+dnssec-policy "a.internal-policy" {
+    keys {
+        ksk lifetime 360d algorithm ecdsap256sha256; // KSK lifetime of 1 year
+        zsk lifetime 30d algorithm ecdsap256sha256; // ZSK lifetime of 30 days
+    };
+};
+...
+```
+
+Assign the policy to dynamic zones in /etc/bind/named.conf.local
+
+```conf
+zone "a.internal.hcinfotech.ch" IN {
+  type primary;
+  ...
+  dnssec-policy "a.internal-policy";
+  ...
+];
+```
+
+### 2.2 Sign the zones with the generated keys
 
 ```bash
 sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S -A -3 "$(head -c 102 /dev/urandom | sha256sum | cut -f1 -d ' ')" \
-    -N increment -o tst.hcinfotech.ch -t /var/lib/bind/tst.hcinfotech.ch.zone
+    -N increment -o internal.hcinfotech.ch -t /var/lib/bind/internal.hcinfotech.ch.zone
 sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S -A -3 "$(head -c 100 /dev/urandom | sha256sum | cut -f1 -d ' ')" \
     -N increment -o 50.1.10.in-addr.arpa -t /var/lib/bind/10.1.50.rev.zone
 ```
@@ -58,12 +84,12 @@ sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S -A -3 "$(head -c 
 - -3 $(head -c 100 /dev/urandom | sha256sum | cut -f1 -d ' '): Generates a NSEC3 chain with the hex encoded salt
 - -N increment: Increments the SOA record serial number
 
-### 2.2 Include the signed zone files in named.conf.local
+### 2.3 Include the signed zone files in named.conf.local
 
 ```conf
-zone "tst.hcinfotech.ch" IN {
+zone "internal.hcinfotech.ch" IN {
   type primary;
-  file "/var/lib/bind/tst.hcinfotech.ch.zone.signed";
+  file "/var/lib/bind/internal.hcinfotech.ch.zone.signed";
   update-policy {
    grant ddns-update-key zonesub ANY;
   };
@@ -79,7 +105,7 @@ zone "50.1.10.in-addr.arpa" {
 };
 ```
 
-### 2.3 Trust anchor / KSK publication
+### 2.4 Trust anchor / KSK publication
 
 If this are public-facing DNS zones, publish the KSK (key-signing DNSKEY) to the DNS registrar so that resolvers can verify.
 This are private-facing DNS zones, configure the primary zone as a trust anchor.
@@ -89,7 +115,7 @@ In named.conf.options on the primary name server. The keys are the KSK public ke
 ```conf
 ...
 trust-anchors {
-  "tst.hcinfotech.ch." initial-key 257 3 13 "v/rp5d8ciyhxNK85lWrOi/UbZyua4HKrB54NUkz2mlKX53MaaoO82nNo g2CDShOK5u6tbMft7k9DGw5hoeadTA==";
+  "internal.hcinfotech.ch." initial-key 257 3 13 "v/rp5d8ciyhxNK85lWrOi/UbZyua4HKrB54NUkz2mlKX53MaaoO82nNo g2CDShOK5u6tbMft7k9DGw5hoeadTA==";
   "50.1.10.in-addr.arpa." initial-key 257 3 13 "NU4johWLFUTWx3gllXFnx2+60HxACPKaiyyqOzTFMcK4Lne/9WhDiYd0 6PhH2VM1+oM8xGQoJReBVb/ErQ1o6Q==";
 };
 ...
@@ -99,28 +125,28 @@ Example: [named.conf.options](./config/primary.named.conf.options)
 
 The resolver validate automatic against these keys because of 'dnssec-validation auto;' in named.conf.options.
 
-### 2.4 Validation
+### 2.5 Validation
 
 After everything is configured perform these tests:
 
 ```bash
 # Check syntax
 sudo named-checkconf
-sudo named-checkzone tst.hcinfotech.ch /var/lib/bind/tst.hcinfotech.ch.zone.signed
+sudo named-checkzone internal.hcinfotech.ch /var/lib/bind/internal.hcinfotech.ch.zone.signed
 
 # Query the zone to check DNSSEC signatures
-dig @ns1.tst.hcinfotech.ch tst.hcinfotech.ch SOA +dnssec
-dig @ns1.tst.hcinfotech.ch tst.hcinfotech.ch A  +dnssec
+dig @ns1.internal.hcinfotech.ch internal.hcinfotech.ch SOA +dnssec
+dig @ns1.internal.hcinfotech.ch internal.hcinfotech.ch A  +dnssec
 
 # Check if the AD bit is set (Authenticated Data)
-dig @ns1.tst.hcinfotech.ch tst.hcinfotech.ch +dnssec +short A
+dig @ns1.internal.hcinfotech.ch internal.hcinfotech.ch +dnssec +short A
 
 # After setting up HMAC using set_HMAC alias
 # Test zone transfer
-dig @ns2.tst.hcinfotech.ch tst.hcinfotech.ch AXFR +noall +answer -y ${HMAC}
+dig @ns2.internal.hcinfotech.ch internal.hcinfotech.ch AXFR +noall +answer -y ${HMAC}
 ```
 
-### 2.5 Common Pitfalls & Troubleshooting
+### 2.6 Common Pitfalls & Troubleshooting
 
 | Problem                             | Likely Cause                                                 | Solution                                                            |
 | ----------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
@@ -136,7 +162,7 @@ dig @ns2.tst.hcinfotech.ch tst.hcinfotech.ch AXFR +noall +answer -y ${HMAC}
 For dynamic zones consider enabling automatic DNSSEC signing in BIND9 by adding to the zones in named.conf.local:
 
 ```conf
-zone tst.hcinfotech.ch {
+zone internal.hcinfotech.ch {
     ...
     inline-signing yes;
     ...
@@ -234,7 +260,7 @@ sudo -u bind crontab -e
 Add:
 
 ```conf
-0 3 * * * /usr/local/sbin/dnssec-resign.sh tst.hcinfotech.ch tst.hcinfotech.ch >/dev/null 2>&1
+0 3 * * * /usr/local/sbin/dnssec-resign.sh internal.hcinfotech.ch internal.hcinfotech.ch >/dev/null 2>&1
 0 3 * * * /usr/local/sbin/dnssec-resign.sh 50.1.10.in-addr.arpa 10.1.50.rev >/dev/null 2>&1
 ```
 
