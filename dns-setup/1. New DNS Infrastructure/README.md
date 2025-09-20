@@ -87,12 +87,12 @@ options {
 ```conf
 allow-notify {
     ...
-    10.1.50.81;  # secondary #1
+    10.1.51.82;  # secondary #1
   };
 
   allow-transfer {
     ...
-    10.1.50.81;  # secondary #1
+    10.1.51.82;  # secondary #1
     key ddns-transfer-key;  # include only if TSIG-protected transfers are used
   };
 };
@@ -129,7 +129,7 @@ $TTL 2d
 
 $ORIGIN a.internal.hcinfotech.ch.
 
-@         IN    SOA     ns4.a.internal.hcinfotech.ch. info.hcinfotech.ch. (
+@         IN    SOA     ns1.a.internal.hcinfotech.ch. admin.internal.hcinfotech.ch. (
                         2025091800      ; serial
                         12h             ; refresh
                         15m             ; retry
@@ -138,14 +138,14 @@ $ORIGIN a.internal.hcinfotech.ch.
                         )
 
 ;NAME       TTL   CLASS   TYPE    Resource Record
-                  IN      NS      ns4.a.internal.hcinfotech.ch.
-                  IN      NS      ns5.a.internal.hcinfotech.ch.
-                  IN      NS      ns6.a.internal.hcinfotech.ch.
+                  IN      NS      ns1.a.internal.hcinfotech.ch.
+                  IN      NS      ns2.a.internal.hcinfotech.ch.
+                  IN      NS      ns3.a.internal.hcinfotech.ch.
 
 ; Name Servers
-ns4               IN      A       10.1.51.81
-ns5               IN      A       10.1.51.82
-ns6               IN      A       10.1.51.83
+ns1               IN      A       10.1.51.81
+ns2               IN      A       10.1.51.82
+ns3               IN      A       10.1.51.83
 
 @         3600    IN      A       10.1.51.135
 b100udns1 3600    IN      A       10.1.51.81
@@ -161,7 +161,7 @@ $TTL  2d
 $ORIGIN   51.1.10.IN-ADDR.ARPA.
 
 
-@         IN      SOA     ns1.a.internal.hcinfotech.ch  info.hcinfotech.ch. (
+@         IN      SOA     ns1.a.internal.hcinfotech.ch  admin.internal.hcinfotech.ch. (
                           2025091701    ; serial
                           12h           ; refresh
                           15m           ; retry
@@ -284,7 +284,7 @@ sudo journalctl -eu named
 
 ## 5. Configure zone delegation on internal.hcinfotech.ch
 
-### 5.1 Primary nmeserver b100u002
+### 5.1 Primary nameserver b100u002
 
 1. Add the delegation nameservers and the glue records to internal.hcinfotech.ch zone files
 
@@ -297,7 +297,7 @@ $TTL 2d
 
 $ORIGIN internal.hcinfotech.ch.
 
-@         IN    SOA     ns1.internal.hcinfotech.ch. info.hcinfotech.ch. (
+@         IN    SOA     ns1.internal.hcinfotech.ch. admin.internal.hcinfotech.ch. (
                         2025091803      ; serial
 ...
 ; Name Servers
@@ -306,14 +306,14 @@ ns2                       IN      A       10.1.50.33
 ns3                       IN      A       10.1.50.34
 ...
 ; Delegation for child zone
-a.internal.hcinfotech.ch.      IN      NS      ns4.a.internal.hcinfotech.ch.
-a.internal.hcinfotech.ch.      IN      NS      ns5.a.internal.hcinfotech.ch.
-a.internal.hcinfotech.ch.      IN      NS      ns6.a.internal.hcinfotech.ch.
+a.internal.hcinfotech.ch.      IN      NS      ns1.a.internal.hcinfotech.ch.
+a.internal.hcinfotech.ch.      IN      NS      ns2.a.internal.hcinfotech.ch.
+a.internal.hcinfotech.ch.      IN      NS      ns3.a.internal.hcinfotech.ch.
 
 ; Glue records for in-zone nameservers
-ns4.a.internal.hcinfotech.ch.  IN      A       10.1.51.81
-ns5.a.internal.hcinfotech.ch.  IN      A       10.1.51.82
-ns6.a.internal.hcinfotech.ch.  IN      A       10.1.51.83
+ns1.a.internal.hcinfotech.ch.  IN      A       10.1.51.81
+ns2.a.internal.hcinfotech.ch.  IN      A       10.1.51.82
+ns3.a.internal.hcinfotech.ch.  IN      A       10.1.51.83
 ...
 @  3600 IN A 10.1.50.135
 b100caweb1 3600 IN A 10.1.50.225
@@ -364,14 +364,13 @@ options {
 };
 ```
 
-NOTE: Add 'empty-zones-enabled no' else the reverse lookup will once again startig at the root '.'
-and will fail.
+NOTE: Add 'empty-zones-enabled no' else the reverse lookup is sent to the internet root servers.
 
 Example: [named.conf.options](./config/primary-dns/named.conf.options)
 
 3. **Update** /etc/bind/named.conf.local
 
-Create views for internal and external lookups. Add the forwarded nameserver for the delegated zones
+Create views for internal and external lookup. Add the forwarded nameserver for the delegated zones
 
 ```code
 view "internal" {
@@ -426,7 +425,7 @@ view "external" {
 };
 ```
 
-I am using CloudFlare as external forwarders. CloudFlare provides the best performance for my area. You can
+I use CloudFlare as external forwarders. CloudFlare provides the best performance for my area. You can
 see the nameservers with the best performance with service [dnsspeddtest.online](https://dnsspeedtest.online/) for example.
 
 Example: [named.conf.local](./config/primary-dns/named.conf.local)

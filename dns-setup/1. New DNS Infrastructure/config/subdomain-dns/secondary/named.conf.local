@@ -1,7 +1,3 @@
-//
-// Do any local configuration here
-//
-
 zone "a.internal.hcinfotech.ch" IN {
   type secondary;
   file "/var/lib/bind/a.internal.hcinfotech.ch.zone";
@@ -18,7 +14,3 @@ zone "51.1.10.in-addr.arpa" {
     10.1.51.81;
   };
 };
-
-// Consider adding the 1918 zones here, if they are not used in your
-// organization
-//include "/etc/bind/zones.rfc1918";

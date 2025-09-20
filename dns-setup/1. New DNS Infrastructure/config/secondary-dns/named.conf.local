@@ -5,7 +5,7 @@ view "internal" {
   // Do NOT forward queries for internal clients — resolve locally
   allow-query { internal; };
   allow-transfer {
-    10.1.50.33;
+    10.1.50.33;  # IP address of the local secondary
   };
   notify yes;
 
@@ -44,7 +44,7 @@ view "external" {
   match-clients { any; };
   recursion yes;
   forwarders {
-    8.8.8.8;
-    8.8.4.4;
+    1.1.1.1;
+    1.0.0.1;
   };
 };
