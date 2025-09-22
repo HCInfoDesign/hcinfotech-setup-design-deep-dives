@@ -113,7 +113,7 @@ Update /etc/bind/named.conf to include ddns-signature file.
 
 ```conf
 ...
-include "/etc/bind/ddns-signaturs";
+include "/etc/bind/ddns-signatures";
 ```
 
 Example: [secondary named.conf](./config/secondary-dns/named.conf)
@@ -139,90 +139,25 @@ sudo systemctl restart named
 
 ## 5. Configure the primary nameserver for dynamic updates
 
-### 5.1 Prepare the transfer files for the zones
+### 5.1 Prepare the transfer of the zones
 
-Prepare the files for the transfer by nsupdate ahead of time. The zone resolution
-is unavailable until nsupdate has updated the zones, after placing the empty zone stubs
-into /var/lib/bind and reloading named configuration.
+- Freeze the updates of the zones until the setup is completed.
 
-The transfer files use the following format:
-
-```conf
-server 10.1.51.81                         # IP address of primary name server
-zone a.internal.hcinfotech.ch             # the zone to be transferred
-update add server1.a.internal.hcinfotech.ch 3600 IN A 10.1.51.138
-...
-update add server51.a.internal.hcinfotech.ch 3600 IN A 10.1.51.211
-send                         # signal nsupdate to start the transfer
-```
-
-Transfer of the reverse lookup follows the same format. Zone replaced by the
-reverse lookup zone (e.g. 51.1.10.in-addr.arpa).
-'update add' command adding the reverse lookup entries
-(e.g. 135.51.1.10.in-addr.arpa 3600 IN PTR server1.a.internal.hcinfotech.ch.)
-
-You could use something such as the following scripts to create these files.
+- Copy the zonefiles from /etc/bind to /var/lib/bind/
 
 ```bash
-echo "server 10.1.51.81" | sudo tee /etc/bind/a.internal.hcinfotech.ch.zone.transfer
-echo "zone a.internal.hcinfotech.ch." | sudo tee -a /etc/bind/a.internal.hcinfotech.ch.zone.transfer
-dig @ns1.a.internal.hcinfotech.ch +noall +answer a.internal.hcinfotech.ch -y $HMAC -t AXFR \
-| grep -E $'[\t| ](A|CNAME|MX)[\t| ]' \
-| while read LINE; do \
-    echo "update add ${LINE}" | sudo tee -a /etc/bind/a.internal.hcinfotech.ch.zone.transfer; \
-  done
-echo "send" | sudo tee -a /etc/bind/a.internal.hcinfotech.ch.zone.transfer
+sudo cp /etc/bind/a.internal.hcinfotech.ch.zone /etc/bind/51.1.10.in-addr.arpa.zone /var/lib/bind/
 ```
 
-Example: [forward zone transfer file](./config/primary-dns/tst.hcinfotech.ch.zone.transfer)
-
-Similar for the transfer of the reverse lookup zone
+- Change permissions to allow bind to update the files
 
 ```bash
-echo "server 10.1.51.81" | sudo tee /etc/bind/51.1.10.in-addr.arpa.zone.transfer
-echo "zone 51.1.10.in-addr.arpa" | sudo tee -a /etc/bind/51.1.10.in-addr.arpa.zone.transfer
-dig @ns1.a.internal.hcinfotech.ch +noall +answer 51.1.10.in-addr.arpa -y $HMAC -t AXFR \
-| grep -E $'[\t| ](PTR)[\t| ]' \
-| while read LINE; do \
-    echo "update add ${LINE}" | sudo tee -a /etc/bind/51.1.10.in-addr.arpa.zone.transfer; \
-  done
-echo "send" | sudo tee -a /etc/bind/51.1.10.in-addr.arpa.zone.transfer
+sudo chown -R bind:bind /var/lib/bind/*
 ```
 
-Example: [reverse zone transfer file](./config/primary-dns/10.1.50.rev.zone.transfer)
+- Increase the serial numbers in the SOA records
 
-### 5.2 Create the initial zone files
-
-Create the initial zone file in /var/lib/bind/. The zone file needs to contain the SOA record,
-and the NS records of the name servers. nsupdate loads everything else dynamically.
-
-Example initial zone file /var/lib/bind/tst.hcinfotech.ch.zone:
-
-```conf
-$TTL 172800     ; 2 days
-$ORIGIN a.internal.hcinfotech.ch.
-@                 IN SOA  ns1.a.internal.hcinfotech.ch. info.internal.hcinfotech.ch. (
-                                2025091000 ; serial
-                                43200      ; refresh (12 hours)
-                                900        ; retry (15 minutes)
-                                1814400    ; expire (3 weeks)
-                                7200       ; minimum (2 hours)
-                                )
-;NAME       TTL   CLASS   TYPE    Resource Record
-                  IN      NS      ns1.a.internal.hcinfotech.ch
-                  IN      NS      ns2.a.internal.hcinfotech.ch
-                  IN      NS      ns3.a.internal.hcinfotech.ch
-
-;Name Servers
-ns1               IN      A       10.1.51.81
-ns2               IN      A       10.1.51.82
-ns3               IN      A       10.1.51.83
-```
-
-Here increase the serial number to signal the secondary servers to re-transfer the zone.
-Create a similar zone file for the reverse lookup.
-
-### 5.3 Change the configuration in /etc/bind/named.conf.local
+### 5.2 Change the configuration in /etc/bind/named.conf.local
 
 Update /etc/bind/named.conf.local on the primary name server and add the following section
 to any zone prepared for dynamical update:
@@ -250,31 +185,30 @@ zone "a.internal.hcinfotech.ch" IN {
 
 Example: [primary named.conf.local](./config/primary-dns/named.conf.local)
 
-Restart named
+### 5.3 Validate and restart
+
+```bash
+sudo -u named-checkconf
+sudo -u bind named-checkzone a.internal.hcinfotech.ch a.internal.hcinfotech.ch.zone
+```
+
+If everything checks out restart named
 
 ```bash
 sudo systemctl restart named
 ```
 
----
-
-## 6. Transfer the currently existing zone to the new dynamic zone
-
-Use nsupdate to create the new zone
+Check stiatus and logs
 
 ```bash
-nsupdate -y $HMAC /etc/bind/a.internal.hcinfotech.ch.zone.transfer
-nsupdate -y $HMAC /etc/bind/51.1.10.in-addr.arpa.zone.transfer
+systemctl status named
+sudo journalctl -eu named
+dig @ns1.a.internal.hcinfotech.ch a.internal.hcinfotech.ch A
 ```
 
-This updates all the records of the file into the new zone. It creates a journal file
-a.internal.hcinfotech.ch.zone.jnl in /var/lib/bind and it notifies all the secondary name servers of
-the changed zone.
+---
 
-Manage this zone only with nsupdate, as manually changing the zone
-file causes conflicts and inconsistencies.
-
-## 7. Dynamic updates with nsupdate
+## 6. Dynamic updates with nsupdate
 
 ### Add a record
 
@@ -289,9 +223,13 @@ update add test.a.internal.hcinfotech.ch. 3600 IN AAAA 2001:db8::1234
 send
 ```
 
-### Delete a record
+Verify:
 
-update.txt:
+```bash
+dig @ns1.a.internal.hcinfotech.ch test.a.internal.hcinfotech.ch AAAA
+```
+
+### Delete a record
 
 ```bash
 nsupdate -y $HMAC
