@@ -21,16 +21,16 @@ view "internal" {
     file "/etc/bind/internal.hcinfotech.ch.zone";
   };
 
-  // Forward zone for child (delegated) so queries go directly to child NS
-  zone "a.internal.hcinfotech.ch" IN {
-    type forward;
-    forwarders { 10.1.51.81; 10.1.51.82; 10.1.51.83; };
-  };
-
   // Reverse zone
   zone "50.1.10.in-addr.arpa" {
     type primary;
     file "/etc/bind/50.1.10.in-addr.arpa.zone";
+  };
+  
+  // Forward zone for child (delegated) so queries go directly to child NS
+  zone "a.internal.hcinfotech.ch" IN {
+    type forward;
+    forwarders { 10.1.51.81; 10.1.51.82; 10.1.51.83; };
   };
 
   // Reverse zone

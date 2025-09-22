@@ -278,6 +278,8 @@ sudo named-checkconf
 sudo systemctl start named
 systemctl status named
 sudo journalctl -eu named
+
+dig @10.1.51.82 b100udns1.a.internal.hcinfotech.ch A
 ```
 
 ---
