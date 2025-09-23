@@ -4,11 +4,10 @@
 
 This guide walks you through enabling DNSSEC signing for your zone. DNSSEC proves to
 DNS resolvers that transferred zone data originates from a trusted authoritative nameserver.
-In this way it makes challenging for attackers to spoof network addresses.
+In this way it makes it challenging for attackers to spoof network addresses.
 
 If this would be a zone on the internet the DNSSEC key signing key would be propagated to
-the domain registrar and prove of authenticity would flow down all the way from top level
-zone, forme .ch.
+the domain registrar and prove of authenticity would flow down all the way from internet root.
 
 Because this configuration is for an intranet site, I select one of my zones as the
 top level zone and authenticity flows down from that point.
@@ -34,7 +33,7 @@ cd /usr/local/etc/dnssec-keys
 sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
 sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -f KSK -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
 sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
-sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
+sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -f KSK -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
 ```
 
 - ECDSAP256SHA256 is a common modern algorithm; adjust as needed.
@@ -73,15 +72,14 @@ zone "a.internal.hcinfotech.ch" IN {
 ### 2.2 Sign the zones with the generated keys
 
 ```bash
-sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S -A -3 "$(head -c 102 /dev/urandom | sha256sum | cut -f1 -d ' ')" \
+sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S  \
     -N increment -o internal.hcinfotech.ch -t /var/lib/bind/internal.hcinfotech.ch.zone
-sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S -A -3 "$(head -c 100 /dev/urandom | sha256sum | cut -f1 -d ' ')" \
+sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S  \
     -N increment -o 50.1.10.in-addr.arpa -t /var/lib/bind/10.1.50.rev.zone
 ```
 
 - -K: Directory to search for the keys
 - -S: Smart signing: dnssec-signzone searches the key repository for corresponding keys for the zones to be signed.
-- -3 $(head -c 100 /dev/urandom | sha256sum | cut -f1 -d ' '): Generates a NSEC3 chain with the hex encoded salt
 - -N increment: Increments the SOA record serial number
 
 ### 2.3 Include the signed zone files in named.conf.local
