@@ -12,6 +12,7 @@ the domain registrar and prove of authenticity would flow down all the way from 
 Because this configuration is for an intranet site, I select one of my zones as the
 top level zone and authenticity flows down from that point.
 
+[Final internal DNS topology](../../common/images/final-internal-dns-topology.png)
 ---
 
 ## 1. Generate DNSSEC keys
