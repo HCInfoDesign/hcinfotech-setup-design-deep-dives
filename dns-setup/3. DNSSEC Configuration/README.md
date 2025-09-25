@@ -12,27 +12,27 @@ the domain registrar and prove of authenticity would flow down all the way from 
 Because this configuration is for an intranet site, I select one of my zones as the
 top level zone and authenticity flows down from that point.
 
-## ![Final internal DNS topology](../../common/images/final-internal-dns-topology.png)
+![Final internal DNS topology](../../common/images/final-internal-dns-topology.png)
 
 ## 1. Generate DNSSEC keys
 
-Create a controlled directory owned by bind to store the keys
+Create a controlled directory owned by bind to store the keys. Create the keys for all primary nameservers.
 
 ```bash
-sudo mkdir -p /usr/local/etc/dnssec-keys
+sudo mkdir -p /var/lib/bind/dnssec-keys
 
-sudo chown bind:bind /usr/local/etc/dnssec-keys
-sudo chmod g-w,o-rwx /usr/local/etc/dnssec-keys
+sudo chown bind:bind /var/lib/bind/dnssec-keys
+sudo chmod g-w,o-rwx /var/lib/bind/dnssec-keys
 ```
 
 Use modern algorithms for example ECDSA P-256 for shorter keys and better performance. You create two
 key pairs for each zone, ZSK (<u>Z</u>one <u>S</u>igning <u>K</u>ey) and KSK (<u>K</u>ey <u>S</u>igning <u>K</u>ey)
 
 ```bash
-sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
-sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -f KSK -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
-sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
-sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -f KSK -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
+sudo -u bind dnssec-keygen -K /var/lib/bind/dnssec-keys -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
+sudo -u bind dnssec-keygen -K /var/lib/bind/dnssec-keys -f KSK -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
+sudo -u bind dnssec-keygen -K /var/lib/bind/dnssec-keys -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
+sudo -u bind dnssec-keygen -K /var/lib/bind/dnssec-keys -f KSK -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
 ```
 
 - ECDSAP256SHA256 is a common modern algorithm; adjust as needed.
@@ -48,7 +48,7 @@ In /etc/bind/named.conf.options:
 
 ```conf
 ...
-dnssec-policy "a.internal-policy" {
+dnssec-policy "internal-policy" {
     keys {
         ksk lifetime 360d algorithm ecdsap256sha256; // KSK lifetime of 1 year
         zsk lifetime 30d algorithm ecdsap256sha256; // ZSK lifetime of 30 days
@@ -60,10 +60,10 @@ dnssec-policy "a.internal-policy" {
 Assign the policy to dynamic zones in /etc/bind/named.conf.local
 
 ```conf
-zone "a.internal.hcinfotech.ch" IN {
+zone "internal.hcinfotech.ch" IN {
   type primary;
   ...
-  dnssec-policy "a.internal-policy";
+  dnssec-policy "internal-policy";
   ...
 ];
 ```
@@ -71,9 +71,9 @@ zone "a.internal.hcinfotech.ch" IN {
 ### 2.2 Sign the zones with the generated keys
 
 ```bash
-sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S  \
+sudo -u bind dnssec-signzone -K /var/lib/bind/dnssec-keys -S  \
     -N increment -o internal.hcinfotech.ch -t /var/lib/bind/internal.hcinfotech.ch.zone
-sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S  \
+sudo -u bind dnssec-signzone -K /var/lib/bind/dnssec-keys -S  \
     -N increment -o 50.1.10.in-addr.arpa -t /var/lib/bind/50.1.10.in-adr.arpa.zone
 ```
 
@@ -102,12 +102,17 @@ zone "50.1.10.in-addr.arpa" {
 };
 ```
 
+Example: [named.conf.local](./config/internal.hcinfotech.ch/trust-anchor/named.conf.local)
+
 ### 2.4 Trust anchor / KSK publication
 
 If this are public-facing DNS zones, publish the KSK (key-signing DNSKEY) to the DNS registrar so that resolvers can verify.
 This are private-facing DNS zones, configure the primary zone as a trust anchor.
 
-In named.conf.options on the primary name server. The keys are the KSK public keys for the zones (files ending with .key in /usr/local/etc/dnssec-keys/)
+#### 2.4.1 Primary nameserver designated as trust anchor (b100u002)
+
+In named.conf.options on the primary name server.
+The keys are the KSK public keys for the zones (files ending with .key in /var/lib/bind/dnssec-keys)
 
 ```conf
 ...
@@ -118,9 +123,70 @@ trust-anchors {
 ...
 ```
 
-Example: [named.conf.options](./config/primary.named.conf.options)
+Example: [named.conf.options](./config/internal.hcinfotech.ch/trust-anchor/named.conf.options)
 
 The resolver validate automatic against these keys because of 'dnssec-validation auto;' in named.conf.options.
+
+#### 2.4.2 Publish DS records
+
+On delegated primaries
+
+- Create DS records for the signed zones
+
+```bash
+sudo -u bind dnssec-dsfromkey -f /var/lib/bind/a.internal.hcinfotech.ch.zone.signed a.internal.hcinfotech.ch
+```
+
+The DS entrie is displayed on the command line
+
+- Paste the DS entry into the trust anchor zonefile
+  - If this is a zone configured for DDNS
+
+  ```bash
+  sudo rndc freeze zone <zone name>
+  ```
+
+  - Update the zonefile
+
+  ```conf
+  $TTL 72000
+
+  $ORIGIN internal.hcinfotech.ch.
+
+  @         IN    SOA     ns1.internal.hcinfotech.ch. admin.internal.hcinfotech.ch. (
+  ...
+  ; Delegation for child zone
+  a.internal.hcinfotech.ch.      IN      NS      ns1.a.internal.hcinfotech.ch.
+  a.internal.hcinfotech.ch.      IN      NS      ns2.a.internal.hcinfotech.ch.
+  a.internal.hcinfotech.ch.      IN      NS      ns3.a.internal.hcinfotech.ch.
+
+  ; Glue records for in-zone nameservers
+  ns1.a.internal.hcinfotech.ch.  IN      A       10.1.51.81
+  ns2.a.internal.hcinfotech.ch.  IN      A       10.1.51.82
+  ns3.a.internal.hcinfotech.ch.  IN      A       10.1.51.83
+
+  ; DS records
+  a.internal.hcinfotech.ch. IN DS 24006 13 2 5F0DB8AE98E363F3E82BFACF20F9EF15A83C88C69CB329418F317B90C036706E
+
+  ; @  3600 IN CNAME b.internal.hcinfotech.ch.
+  b100caweb1 3600 IN CNAME b100caweb1.b.internal.hcinfotech.ch.
+  b100caweb2 3600 IN CNAME b100caweb2.b.internal.hcinfotech.ch.
+  ...
+  ```
+
+  - If the zone was frozen
+
+  ```bash
+  sudo rndc thaw
+  ```
+
+  - Else update the serial number and reload
+
+  ```bash
+  sudo rndc reload
+  ```
+
+  Example: [Trust anchor zonefile](./config/internal.hcinfotech.ch/trust-anchor/internal.hcinfotect.ch.zone)
 
 ### 2.5 Validation
 
@@ -218,51 +284,6 @@ KSKs sign the DNSKEY RRset and are usually more static, changed only occasionall
 
 Following these steps minimizes downtime and ensures continuous DNSSEC validation during key rollovers.
 
-### 4.3 Automating ZSK rollover and zone re-signing
-
-Manually re-signing zones and rolling over ZSKs can be error-prone. Automating the process helps maintain security and consistency.
-
-#### 4.3.1 Example: Cron job for zone re-signing
-
-Create a script /usr/local/sbin/dnssec-resign.sh:
-
-```code
-#!/bin/bash
-ZONE="$1"
-ZONEFILE="/var/lib/bind/${2}.zone"
-KEYDIR="/usr/local/etc/dnssec-keys/"
-
-# Re-sign the zone using the current keys
-cd /var/lib/bind/
-dnssec-signzone -K $KEYDIR -S -o $ZONE -N increment $ZONEFILE
-
-# Reload named to apply changes
-rndc reload
-```
-
-Example: [dnssec-resign.sh](./config/dnssec-resign.sh)
-
-Make the script executable:
-
-```bash
-sudo chmod +x /usr/local/sbin/dnssec-resign.sh
-```
-
-Add a cron job to re-sign the zone daily:
-
-```bash
-sudo -u bind crontab -e
-```
-
-Add:
-
-```conf
-0 3 * * * /usr/local/sbin/dnssec-resign.sh internal.hcinfotech.ch internal.hcinfotech.ch >/dev/null 2>&1
-0 3 * * * /usr/local/sbin/dnssec-resign.sh 50.1.10.in-addr.arpa 10.1.50.rev >/dev/null 2>&1
-```
-
-This ensures signatures are refreshed before they expire
-
 ---
 
 ## 5. Security best practices
@@ -271,8 +292,8 @@ This ensures signatures are refreshed before they expire
    - Restrict key files (.key, .private) to be readable only by the bind user and group:
 
    ```bash
-    sudo chown root:bind /usr/local/etc/dnssec-keys/K*
-    sudo chmod 640 /usr/local/etc/dnssec-keys/
+    sudo chown bind:bind /var/lib/bind/dnssec-keys/K*
+    sudo chmod 600 /var/lib/bind/dnssec-keys
    ```
 
    - Ensure /var/lib/bind is not world-readable.
