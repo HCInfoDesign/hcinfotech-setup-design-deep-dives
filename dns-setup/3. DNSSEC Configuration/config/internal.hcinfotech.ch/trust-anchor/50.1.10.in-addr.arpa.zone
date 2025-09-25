@@ -1,0 +1,16 @@
+$TTL 72000      ; 20 hours
+50.1.10.IN-ADDR.ARPA.   IN SOA  ns1.internal.hcinfotech.ch.50.1.10.IN-ADDR.ARPA. admin.internal.hcinfotech.ch. (
+                                2025092521 ; serial
+                                43200      ; refresh (12 hours)
+                                900        ; retry (15 minutes)
+                                1814400    ; expire (3 weeks)
+                                7200       ; minimum (2 hours)
+                                )
+                        NS      ns1.internal.hcinfotech.ch.
+                        NS      ns2.internal.hcinfotech.ch.
+                        NS      ns3.internal.hcinfotech.ch.
+$TTL 3600       ; 1 hour
+51.1.10.in-addr.arpa. IN DS 6139 13 2 8EA3CACF948BC8246C23F9DAD5648C18D70D41DBDF6023529A70171EE344B6C5
+102.50.1.10.IN-ADDR.ARPA. PTR   opnsense2.internal.hcinfotech.ch.
+108.50.1.10.IN-ADDR.ARPA. PTR   b100umon3.internal.hcinfotech.ch.
+

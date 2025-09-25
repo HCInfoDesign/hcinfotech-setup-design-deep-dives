@@ -1,0 +1,22 @@
+$TTL  1d
+$ORIGIN   51.1.10.IN-ADDR.ARPA.
+
+
+@         IN      SOA     ns1.internal.hcinfotech.ch  admin.internal.hcinfotech.ch. (
+                          2025092400    ; serial
+                          12h           ; refresh
+                          15m           ; retry
+                          3w            ; expire
+                          2h            ; minimum ttl
+                          )
+; NS Records for the delecated zone
+;NAME       TTL   CLASS   TYPE    Resource Record
+                  IN      NS      ns1.a.internal.hcinfotech.ch.
+                  IN      NS      ns2.a.internal.hcinfotech.ch.
+                  IN      NS      ns3.a.internal.hcinfotech.ch.
+
+; Glue records for the name serveers
+ns1.a.internal.hcinfotech.ch.    IN A 10.1.51.81
+ns2.a.internal.hcinfotech.ch.    IN A 10.1.51.82
+ns3.a.internal.hcinfotech.ch.    IN A 10.1.51.83
+

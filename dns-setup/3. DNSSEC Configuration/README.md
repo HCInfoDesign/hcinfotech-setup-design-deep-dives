@@ -29,7 +29,6 @@ Use modern algorithms for example ECDSA P-256 for shorter keys and better perfor
 key pairs for each zone, ZSK (<u>Z</u>one <u>S</u>igning <u>K</u>ey) and KSK (<u>K</u>ey <u>S</u>igning <u>K</u>ey)
 
 ```bash
-cd /usr/local/etc/dnssec-keys
 sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
 sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -f KSK -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
 sudo -u bind dnssec-keygen -K /usr/local/etc/dnssec-keys/ -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
@@ -75,7 +74,7 @@ zone "a.internal.hcinfotech.ch" IN {
 sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S  \
     -N increment -o internal.hcinfotech.ch -t /var/lib/bind/internal.hcinfotech.ch.zone
 sudo -u bind dnssec-signzone -K /usr/local/etc/dnssec-keys/ -S  \
-    -N increment -o 50.1.10.in-addr.arpa -t /var/lib/bind/10.1.50.rev.zone
+    -N increment -o 50.1.10.in-addr.arpa -t /var/lib/bind/50.1.10.in-adr.arpa.zone
 ```
 
 - -K: Directory to search for the keys

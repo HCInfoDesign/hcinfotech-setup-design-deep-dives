@@ -1,0 +1,15 @@
+acl internal {
+  10.0.0.0/8;
+};
+
+options {
+  directory "/var/cache/bind";
+
+  allow-query { internal; };
+
+  empty-zones-enable no;
+
+  dnssec-validation auto;
+
+  listen-on-v6 { any; };
+};

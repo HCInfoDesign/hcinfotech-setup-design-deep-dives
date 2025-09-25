@@ -1,0 +1,39 @@
+$TTL 72000
+
+$ORIGIN internal.hcinfotech.ch.
+
+@         IN    SOA     ns1.internal.hcinfotech.ch. admin.internal.hcinfotech.ch. (
+                        2025092320      ; serial
+                        12h             ; refresh
+                        15m             ; retry
+                        3w              ; expire
+                        2h              ; minimum ttl
+                        )
+
+;NAME       TTL   CLASS   TYPE    Resource Record
+                  IN      NS      ns1.internal.hcinfotech.ch.
+                  IN      NS      ns2.internal.hcinfotech.ch.
+                  IN      NS      ns3.internal.hcinfotech.ch.
+
+; Name Servers
+ns1               IN      A       10.1.50.32
+ns2               IN      A       10.1.50.33
+ns3               IN      A       10.1.50.34
+
+; Delegation for child zone
+a.internal.hcinfotech.ch.      IN      NS      ns1.a.internal.hcinfotech.ch.
+a.internal.hcinfotech.ch.      IN      NS      ns2.a.internal.hcinfotech.ch.
+a.internal.hcinfotech.ch.      IN      NS      ns3.a.internal.hcinfotech.ch.
+
+; Glue records for in-zone nameservers
+ns1.a.internal.hcinfotech.ch.  IN      A       10.1.51.81
+ns2.a.internal.hcinfotech.ch.  IN      A       10.1.51.82
+ns3.a.internal.hcinfotech.ch.  IN      A       10.1.51.83
+
+; DS records
+a.internal.hcinfotech.ch. IN DS 24006 13 2 5F0DB8AE98E363F3E82BFACF20F9EF15A83C88C69CB329418F317B90C036706E
+
+; @  3600 IN CNAME b.internal.hcinfotech.ch.
+b100caweb1 3600 IN CNAME b100caweb1.b.internal.hcinfotech.ch.
+b100caweb2 3600 IN CNAME b100caweb2.b.internal.hcinfotech.ch.
+

@@ -1,0 +1,21 @@
+acl internal {
+  10.0.0.0/8;
+};
+
+options {
+  directory "/var/cache/bind";
+
+  allow-transfer {
+    10.1.51.82;  # secondary #1
+    key ddns-transfer-key;
+  };
+
+  allow-query { internal; };
+  recursion yes;
+  notify yes;
+
+  dnssec-validation auto;
+
+  listen-on-v6 { any; };
+};
+
