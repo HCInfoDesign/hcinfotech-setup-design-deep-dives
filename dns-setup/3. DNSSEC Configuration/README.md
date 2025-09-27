@@ -55,6 +55,8 @@ dnssec-policy "internal-policy" {
     };
 };
 ...
+key-directory "/var/lib/bind/dnssec-keys/";
+...
 ```
 
 Assign the policy to dynamic zones in /etc/bind/named.conf.local
@@ -71,10 +73,11 @@ zone "internal.hcinfotech.ch" IN {
 ### 2.2 Sign the zones with the generated keys
 
 ```bash
+cd /var/lib/bind
 sudo -u bind dnssec-signzone -K /var/lib/bind/dnssec-keys -S  \
     -N increment -o internal.hcinfotech.ch -t /var/lib/bind/internal.hcinfotech.ch.zone
 sudo -u bind dnssec-signzone -K /var/lib/bind/dnssec-keys -S  \
-    -N increment -o 50.1.10.in-addr.arpa -t /var/lib/bind/50.1.10.in-adr.arpa.zone
+    -N increment -o 50.1.10.in-addr.arpa -t /var/lib/bind/50.1.10.in-addr.arpa.zone
 ```
 
 - -K: Directory to search for the keys
@@ -104,6 +107,8 @@ zone "50.1.10.in-addr.arpa" {
 
 Example: [named.conf.local](./config/internal.hcinfotech.ch/trust-anchor/named.conf.local)
 
+NOTE: Check that all TTLs in the zones are less than or equal to 86400 (maximum set in the dnssec-policy)!!
+
 ### 2.4 Trust anchor / KSK publication
 
 If this are public-facing DNS zones, publish the KSK (key-signing DNSKEY) to the DNS registrar so that resolvers can verify.
@@ -118,7 +123,6 @@ The keys are the KSK public keys for the zones (files ending with .key in /var/l
 ...
 trust-anchors {
   "internal.hcinfotech.ch." initial-key 257 3 13 "v/rp5d8ciyhxNK85lWrOi/UbZyua4HKrB54NUkz2mlKX53MaaoO82nNo g2CDShOK5u6tbMft7k9DGw5hoeadTA==";
-  "50.1.10.in-addr.arpa." initial-key 257 3 13 "NU4johWLFUTWx3gllXFnx2+60HxACPKaiyyqOzTFMcK4Lne/9WhDiYd0 6PhH2VM1+oM8xGQoJReBVb/ErQ1o6Q==";
 };
 ...
 ```
@@ -231,6 +235,8 @@ zone internal.hcinfotech.ch {
     ...
 };
 ```
+
+NOTE: It is already included in the dnssec-policy here
 
 Example: [named.conf.local](./config/primary.named.conf.local)
 
