@@ -26,7 +26,7 @@ Process during the current reconfiguration module:
 
 Final goal:
 
-![Target DNS Topology Intranet](../../common/images/target-internal-dns-topology.png)
+![Target DNS Topology Intranet](../../common/images/final-internal-dns-topology.png)
 
 - After the complete network redesign, b100u002 with secondaries b100u003 and b100u004 assumes the authoritative role for top level domain internal.hcinfotech.ch
 - It delegates responsibility to subdomains x.internal.hcinfotech.ch
