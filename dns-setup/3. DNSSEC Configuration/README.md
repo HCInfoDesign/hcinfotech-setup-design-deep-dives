@@ -16,7 +16,7 @@ top level zone and authenticity flows down from that point.
 
 ## 1. Generate DNSSEC keys
 
-Create a controlled directory owned by bind to store the keys. Create the keys for all primary nameservers.
+Create a controlled directory owned by bind to store the keys.
 
 ```bash
 sudo mkdir -p /var/lib/bind/dnssec-keys
@@ -25,38 +25,21 @@ sudo chown bind:bind /var/lib/bind/dnssec-keys
 sudo chmod g-w,o-rwx /var/lib/bind/dnssec-keys
 ```
 
-Use modern algorithms for example ECDSA P-256 for shorter keys and better performance. You create two
-key pairs for each zone, ZSK (<u>Z</u>one <u>S</u>igning <u>K</u>ey) and KSK (<u>K</u>ey <u>S</u>igning <u>K</u>ey)
-
-```bash
-sudo -u bind dnssec-keygen -K /var/lib/bind/dnssec-keys -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
-sudo -u bind dnssec-keygen -K /var/lib/bind/dnssec-keys -f KSK -a ECDSAP256SHA256 -n ZONE internal.hcinfotech.ch
-sudo -u bind dnssec-keygen -K /var/lib/bind/dnssec-keys -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
-sudo -u bind dnssec-keygen -K /var/lib/bind/dnssec-keys -f KSK -a ECDSAP256SHA256 -n ZONE 50.1.10.in-addr.arpa
-```
-
-- ECDSAP256SHA256 is a common modern algorithm; adjust as needed.
-- The -f KSK flag makes the second key the Key Signing Key (used as root of trust).
-
 ---
 
 ## 2. Enable DNSSEC in the zones
 
 ### 2.1 Define the dnssec-policy
 
+Use default policy. Settings could be changed by creating dnssec-policyi ([BIND9 - readthedocs](https://bind9.readthedocs.io/en/stable/chapter5.html)).
+
 In /etc/bind/named.conf.options:
 
 ```conf
 ...
-dnssec-policy "internal-policy" {
-    keys {
-        ksk lifetime 360d algorithm ecdsap256sha256; // KSK lifetime of 1 year
-        zsk lifetime 30d algorithm ecdsap256sha256; // ZSK lifetime of 30 days
-    };
-};
-...
 key-directory "/var/lib/bind/dnssec-keys/";
 ...
+
 ```
 
 Assign the policy to dynamic zones in /etc/bind/named.conf.local
@@ -65,44 +48,9 @@ Assign the policy to dynamic zones in /etc/bind/named.conf.local
 zone "internal.hcinfotech.ch" IN {
   type primary;
   ...
-  dnssec-policy "internal-policy";
+  dnssec-policy default;
   ...
 ];
-```
-
-### 2.2 Sign the zones with the generated keys
-
-```bash
-cd /var/lib/bind
-sudo -u bind dnssec-signzone -K /var/lib/bind/dnssec-keys -S  \
-    -N increment -o internal.hcinfotech.ch -t /var/lib/bind/internal.hcinfotech.ch.zone
-sudo -u bind dnssec-signzone -K /var/lib/bind/dnssec-keys -S  \
-    -N increment -o 50.1.10.in-addr.arpa -t /var/lib/bind/50.1.10.in-addr.arpa.zone
-```
-
-- -K: Directory to search for the keys
-- -S: Smart signing: dnssec-signzone searches the key repository for corresponding keys for the zones to be signed.
-- -N increment: Increments the SOA record serial number
-
-### 2.3 Include the signed zone files in named.conf.local
-
-```conf
-zone "internal.hcinfotech.ch" IN {
-  type primary;
-  file "/var/lib/bind/internal.hcinfotech.ch.zone.signed";
-  update-policy {
-   grant ddns-update-key zonesub ANY;
-  };
-};
-
-// zone file for the reverse lookup
-zone "50.1.10.in-addr.arpa" {
-  type primary;
-  file "/var/lib/bind/10.1.50.rev.zone.signed";
-  update-policy {
-   grant ddns-update-key zonesub ANY;
-  };
-};
 ```
 
 Example: [named.conf.local](./config/internal.hcinfotech.ch/trust-anchor/named.conf.local)
@@ -138,7 +86,7 @@ On delegated primaries
 - Create DS records for the signed zones
 
 ```bash
-sudo -u bind dnssec-dsfromkey -f /var/lib/bind/a.internal.hcinfotech.ch.zone.signed a.internal.hcinfotech.ch
+sudo -u bind dnssec-dsfromkey /var/lib/bind/dnssec-keys/<generated public key>
 ```
 
 The DS entrie is displayed on the command line
@@ -178,13 +126,14 @@ The DS entrie is displayed on the command line
   ...
   ```
 
+  NOTE: Update the serial number.
   - If the zone was frozen
 
   ```bash
   sudo rndc thaw
   ```
 
-  - Else update the serial number and reload
+  - Else reload
 
   ```bash
   sudo rndc reload

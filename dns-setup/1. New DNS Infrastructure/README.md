@@ -24,14 +24,17 @@ Process during the current reconfiguration module:
 1. Configure newly installed nameservers as primary and secondaries for zone a.internal.hcinfotech.ch.
 2. Change configuration of the current topology of internal.hcinfotech.ch to delegate responsibility to the new zone.
 
+![Target DNS Topology - Part 1](../../common/images/part-1-target-internal-dns-topology.png)
+
 Final goal:
 
 ![Target DNS Topology Intranet](../../common/images/final-internal-dns-topology.png)
 
-- After the complete network redesign, b100u002 with secondaries b100u003 and b100u004 assumes the authoritative role for top level domain internal.hcinfotech.ch
-- It delegates responsibility to subdomains x.internal.hcinfotech.ch
-- A, CNAME, MX and PTR records of internal.hcinfotech.ch are successive migrate to a new subdomain
-- Finally internal.hcinfotech.ch contains only the DS recors of internal DNSSEC and the delegation to the subdomains
+- After the complete network redesign, newly created b100u001 (primary) and b100u000 (secondary) assume the authoritative roles for top level domain internal.hcinfotech.ch
+- Responsibility is delegated to subdomains x.internal.hcinfotech.ch
+- Current primary b100u002 with secondaries b100u003 and b100u004 are converted to recursive resolvers
+- A, CNAME, MX and PTR records of internal.hcinfotech.ch are successively migrate to a new subdomain
+- Finally internal.hcinfotech.ch contains only the DS records of internal DNSSEC and the delegation to the subdomains
 
 ---
 
