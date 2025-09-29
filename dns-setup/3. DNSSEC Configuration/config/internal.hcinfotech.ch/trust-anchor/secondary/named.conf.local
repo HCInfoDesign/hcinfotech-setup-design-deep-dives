@@ -1,0 +1,8 @@
+// Primary zone (unchanged)
+zone "internal.hcinfotech.ch" IN {
+  type secondary;
+  file "/var/lib/bind/internal.hcinfotech.ch.zone";
+  primaries {
+    10.1.50.31;
+  };
+};

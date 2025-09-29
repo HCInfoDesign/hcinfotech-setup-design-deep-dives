@@ -3,13 +3,13 @@ acl internal {
 };
 
 options {
-  directory "/var/cache/bind";
-
-  allow-query { internal; };
+	directory "/var/cache/bind";
 
   empty-zones-enable no;
 
-  dnssec-validation auto;
+  allow-query { internal; };
 
-  listen-on-v6 { any; };
+	dnssec-validation auto;
+
+	listen-on-v6 { any; };
 };

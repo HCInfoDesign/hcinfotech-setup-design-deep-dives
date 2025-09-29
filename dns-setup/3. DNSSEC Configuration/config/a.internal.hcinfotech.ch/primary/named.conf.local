@@ -1,7 +1,7 @@
 zone "a.internal.hcinfotech.ch" IN {
   type primary;
-  file "/var/lib/bind/a.internal.hcinfotech.ch.zone.signed";
-  dnssec-policy "a.internal-policy";
+  file "/var/lib/bind/a.internal.hcinfotech.ch.zone";
+  dnssec-policy default;
   update-policy {
     grant ddns-update-key zonesub ANY;
   };
@@ -10,8 +10,7 @@ zone "a.internal.hcinfotech.ch" IN {
 // zone file for the reverse lookup
 zone "51.1.10.in-addr.arpa" {
   type primary;
-  file "/var/lib/bind/51.1.10.in-addr.arpa.zone.signed";
-  dnssec-policy "a.internal-policy";
+  file "/var/lib/bind/51.1.10.in-addr.arpa.zone";
   update-policy {
     grant ddns-update-key zonesub ANY;
   };

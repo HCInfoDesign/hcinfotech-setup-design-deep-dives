@@ -2,12 +2,6 @@ acl internal {
   10.0.0.0/8;
 };
 
-dnssec-policy "a.internal-policy" {
-    keys {
-        ksk  lifetime 360d algorithm ecdsap256sha256; // KSK lifetime of 1 year
-        zsk  lifetime 30d algorithm ecdsap256sha256; // ZSK lifetime of 30 days
-    };
-};
 
 options {
   directory "/var/cache/bind";
@@ -24,11 +18,11 @@ options {
   };
 
   allow-query { internal; };
-  recursion yes;
+  recursion no;
   notify yes;
 
-  dnssec-validation auto;
   key-directory "/var/lib/bind/dnssec-keys/";
+  dnssec-validation auto;
 
   listen-on-v6 { any; };
 };

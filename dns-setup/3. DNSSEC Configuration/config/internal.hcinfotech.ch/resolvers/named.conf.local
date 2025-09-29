@@ -4,43 +4,40 @@ view "internal" {
 
   // Do NOT forward queries for internal clients — resolve locally
   allow-query { internal; };
+  allow-notify {
+    10.1.50.32;  # IP address of the local secondary
+  };
   allow-transfer {
-    10.1.50.31;  # IP address of the local secondary
+    10.1.50.32;  # IP address of the local secondary
     key ddns-transfer-key;
   };
-  notify yes;
+  notify no;
 
   // Primary zone (unchanged)
   zone "internal.hcinfotech.ch" IN {
     type secondary;
     file "/var/lib/bind/internal.hcinfotech.ch.zone";
     primaries {
-      10.1.50.32;
+      10.1.50.31;
     };
   };
 
-  // Primary zone (unchanged)
+  // Forward zone for child (delegated) so queries go directly to child NS
   zone "b.internal.hcinfotech.ch" IN {
-    type secondary;
-    file "/var/lib/bind/b.internal.hcinfotech.ch.zone";
-    primaries {
-      10.1.50.32;
-    };
+    type forward;
+    forwarders { 10.1.50.84; 10.1.50.85; 10.1.50.86; };
+  };
+
+  // Reverse zone
+  zone "50.1.10.in-addr.arpa" {
+    type forward;
+    forwarders { 10.1.50.84; 10.1.50.85; 10.1.50.86; };
   };
 
   // Forward zone for child (delegated) so queries go directly to child NS
   zone "a.internal.hcinfotech.ch" IN {
     type forward;
     forwarders { 10.1.51.81; 10.1.51.82; 10.1.51.83; };
-  };
-
-  // Reverse zone
-  zone "50.1.10.in-addr.arpa" {
-    type secondary;
-    file "/var/lib/bind/50.1.10.in-addr.arpa.zone";
-    primaries {
-      10.1.50.32;
-    };
   };
 
   // Reverse zone

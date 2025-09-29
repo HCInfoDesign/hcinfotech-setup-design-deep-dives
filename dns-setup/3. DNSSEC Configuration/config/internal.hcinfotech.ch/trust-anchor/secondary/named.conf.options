@@ -1,0 +1,21 @@
+acl internal {
+  10.0.0.0/8;
+};
+
+trust-anchors {
+  "internal.hcinfotech.ch." initial-key 257 3 13 "V0F+QtEdcxcWWou3exX80hgByMobsYHNiwDWv+PLIA/6ZtNKMPidp996 RA9bQuq0jagqDQAHAbN1FzAMioAs6g==";
+  "internal.hcinfotech.ch." initial-key 257 3 13 "K1gJ81u18iYUik47EHZNMuDuQBU+EGhvQlxLkT6nhl9h4sG6vMNsxGj4 IFJMxyvtXrgeaDBdB6Yg/Uq3NI2ojw==";
+  "10.in-addr.arpa." initial-key 257 3 13 "vLb6OLpOC5xC2LJD1PIZadwNN5bvpcj6HtlNzZlHgxbk9ugKD9ngHeow QqvW7ALuKgve4mApadk134KlkAgTHQ==";
+};
+
+options {
+	directory "/var/cache/bind";
+
+  empty-zones-enable no;
+
+  allow-query { internal; };
+
+	dnssec-validation auto;
+
+	listen-on-v6 { any; };
+};

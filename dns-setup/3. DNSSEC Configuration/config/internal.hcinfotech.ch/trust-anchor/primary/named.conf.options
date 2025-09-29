@@ -1,0 +1,31 @@
+acl internal {
+  10.0.0.0/8;
+};
+
+trust-anchors {
+  "internal.hcinfotech.ch." initial-key 257 3 13 "V0F+QtEdcxcWWou3exX80hgByMobsYHNiwDWv+PLIA/6ZtNKMPidp996 RA9bQuq0jagqDQAHAbN1FzAMioAs6g==";
+};
+
+options {
+  directory "/var/cache/bind";
+
+  allow-notify {
+    10.1.50.30;  # secondary #1
+  };
+
+  allow-transfer {
+    10.1.50.30;  # secondary #1
+    10.1.50.32;  # secondary #1
+    10.1.50.33;  # secondary #2
+    10.1.50.34;  # secondary #2
+    key ddns-transfer-key;
+  };
+
+  allow-query { internal; };
+  notify yes;
+
+  key-directory "/var/lib/bind/dnssec-keys/";
+  dnssec-validation auto;
+
+  listen-on-v6 { any; };
+};

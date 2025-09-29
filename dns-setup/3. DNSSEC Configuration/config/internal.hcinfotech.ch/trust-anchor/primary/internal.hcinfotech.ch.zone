@@ -1,0 +1,102 @@
+$TTL 86400	; 1 day
+internal.hcinfotech.ch.	IN SOA	ns1.internal.hcinfotech.ch. admin.internal.hcinfotech.ch. (
+				2025092801 ; serial
+				43200      ; refresh (12 hours)
+				900        ; retry (15 minutes)
+				1814400    ; expire (3 weeks)
+				7200       ; minimum (2 hours)
+				)
+			NS	ns1.internal.hcinfotech.ch.
+			NS	ns2.internal.hcinfotech.ch.
+a.internal.hcinfotech.ch. NS	ns1.a.internal.hcinfotech.ch.
+			NS	ns2.a.internal.hcinfotech.ch.
+			NS	ns3.a.internal.hcinfotech.ch.
+ns1.a.internal.hcinfotech.ch. A	10.1.51.81
+ns2.a.internal.hcinfotech.ch. A	10.1.51.82
+ns3.a.internal.hcinfotech.ch. A	10.1.51.83
+b.internal.hcinfotech.ch. NS	ns1.b.internal.hcinfotech.ch.
+			NS	ns2.b.internal.hcinfotech.ch.
+			NS	ns3.b.internal.hcinfotech.ch.
+ns1.b.internal.hcinfotech.ch. A	10.1.50.84
+ns2.b.internal.hcinfotech.ch. A	10.1.50.85
+ns3.b.internal.hcinfotech.ch. A	10.1.50.86
+
+; DS Records
+a.internal.hcinfotech.ch. IN DS 51276 13 2 69B8DFC76ED6DAE1894913513053A598B5436E67CEBB658E9A57488136D2504C
+b.internal.hcinfotech.ch. IN DS 25989 13 2 8686EFCD8861B8E38F67C9F5FE889E3FD3D1046B5A3A95E197D14DB6C9F43174
+
+
+$TTL 600	; 10 minutes
+b100caweb1.internal.hcinfotech.ch. CNAME b100caweb1.b.internal.hcinfotech.ch.
+b100caweb2.internal.hcinfotech.ch. CNAME b100caweb2.b.internal.hcinfotech.ch.
+b100caweb3.internal.hcinfotech.ch. CNAME b100caweb3.b.internal.hcinfotech.ch.
+b100ldap.internal.hcinfotech.ch. CNAME b100ldap.b.internal.hcinfotech.ch.
+b100ldap1.internal.hcinfotech.ch. CNAME	b100ldap1.b.internal.hcinfotech.ch.
+b100ldap2.internal.hcinfotech.ch. CNAME	b100ldap2.b.internal.hcinfotech.ch.
+b100ldap3.internal.hcinfotech.ch. CNAME	b100ldap3.b.internal.hcinfotech.ch.
+b100ldap4.internal.hcinfotech.ch. CNAME	b100ldap4.b.internal.hcinfotech.ch.
+b100mail1.internal.hcinfotech.ch. CNAME	b100mail1.b.internal.hcinfotech.ch.
+b100mail2.internal.hcinfotech.ch. CNAME	b100mail2.b.internal.hcinfotech.ch.
+b100pggrf-lb.internal.hcinfotech.ch. CNAME b100pggrf-lb.b.internal.hcinfotech.ch.
+b100pggrf1.internal.hcinfotech.ch. CNAME b100pggrf1.b.internal.hcinfotech.ch.
+b100pggrf2.internal.hcinfotech.ch. CNAME b100pggrf2.b.internal.hcinfotech.ch.
+b100pggrf3.internal.hcinfotech.ch. CNAME b100pggrf3.b.internal.hcinfotech.ch.
+b100pggrf4.internal.hcinfotech.ch. CNAME b100pggrf4.b.internal.hcinfotech.ch.
+b100pggrf5.internal.hcinfotech.ch. CNAME b100pggrf5.b.internal.hcinfotech.ch.
+b100strg1.internal.hcinfotech.ch. CNAME	b100strg1.b.internal.hcinfotech.ch.
+b100swrep1.internal.hcinfotech.ch. CNAME b100swrep1.b.internal.hcinfotech.ch.
+b100swrep2.internal.hcinfotech.ch. CNAME b100swrep2.b.internal.hcinfotech.ch.
+b100tnas1.internal.hcinfotech.ch. CNAME	b100tnas1.b.internal.hcinfotech.ch.
+b100tnas2.internal.hcinfotech.ch. CNAME	b100tnas2.b.internal.hcinfotech.ch.
+b100u000.internal.hcinfotech.ch. A 10.1.50.30
+b100u001.internal.hcinfotech.ch. A 10.1.50.31
+b100u002.internal.hcinfotech.ch. CNAME b100u002.b.internal.hcinfotech.ch.
+b100u003.internal.hcinfotech.ch. CNAME b100u003.b.internal.hcinfotech.ch.
+b100u004.internal.hcinfotech.ch. CNAME b100u004.b.internal.hcinfotech.ch.
+b100u005.internal.hcinfotech.ch. CNAME b100u005.b.internal.hcinfotech.ch.
+b100u006.internal.hcinfotech.ch. CNAME b100u006.b.internal.hcinfotech.ch.
+b100u010.internal.hcinfotech.ch. CNAME b100u010.b.internal.hcinfotech.ch.
+b100u011.internal.hcinfotech.ch. CNAME b100u011.b.internal.hcinfotech.ch.
+b100u012.internal.hcinfotech.ch. CNAME b100u012.b.internal.hcinfotech.ch.
+b100u013.internal.hcinfotech.ch. CNAME b100u013.b.internal.hcinfotech.ch.
+b100u014.internal.hcinfotech.ch. CNAME b100u014.b.internal.hcinfotech.ch.
+b100u015.internal.hcinfotech.ch. CNAME b100u015.b.internal.hcinfotech.ch.
+b100u016.internal.hcinfotech.ch. CNAME b100u016.b.internal.hcinfotech.ch.
+b100u017.internal.hcinfotech.ch. CNAME b100u017.b.internal.hcinfotech.ch.
+b100u018.internal.hcinfotech.ch. CNAME b100u018.b.internal.hcinfotech.ch.
+b100u800.internal.hcinfotech.ch. CNAME b100u800.b.internal.hcinfotech.ch.
+b100udsk.internal.hcinfotech.ch. CNAME b100udsk.b.internal.hcinfotech.ch.
+b100umon1.internal.hcinfotech.ch. CNAME	b100umon1.b.internal.hcinfotech.ch.
+b100umon2.internal.hcinfotech.ch. CNAME	b100umon2.b.internal.hcinfotech.ch.
+b100umon3.internal.hcinfotech.ch. CNAME	b100umon3.b.internal.hcinfotech.ch.
+b100umon4.internal.hcinfotech.ch. CNAME	b100umon4.b.internal.hcinfotech.ch.
+b100upbs1.internal.hcinfotech.ch. CNAME	b100upbs1.b.internal.hcinfotech.ch.
+b100upbs2.internal.hcinfotech.ch. CNAME	b100upbs2.b.internal.hcinfotech.ch.
+b100uprt.internal.hcinfotech.ch. CNAME b100uprt.b.internal.hcinfotech.ch.
+b100utmp.internal.hcinfotech.ch. CNAME b100utmp.b.internal.hcinfotech.ch.
+b100utmp1.internal.hcinfotech.ch. CNAME	b100utmp1.b.internal.hcinfotech.ch.
+b100utmp2.internal.hcinfotech.ch. CNAME	b100utmp2.b.internal.hcinfotech.ch.
+b100utmp3.internal.hcinfotech.ch. CNAME	b100utmp3.b.internal.hcinfotech.ch.
+crl-server.internal.hcinfotech.ch. CNAME crl-server.b.internal.hcinfotech.ch.
+grafana.internal.hcinfotech.ch.	CNAME grafana.b.internal.hcinfotech.ch.
+HPBF7ABB.internal.hcinfotech.ch. CNAME HPBF7ABB.b.internal.hcinfotech.ch.
+influxdb.internal.hcinfotech.ch. CNAME influxdb.b.internal.hcinfotech.ch.
+kubelb.internal.hcinfotech.ch. CNAME kubelb.b.internal.hcinfotech.ch.
+kubevip.internal.hcinfotech.ch.	CNAME kubevip.b.internal.hcinfotech.ch.
+loki.internal.hcinfotech.ch. CNAME loki.b.internal.hcinfotech.ch.
+monitor.internal.hcinfotech.ch.	CNAME monitor.b.internal.hcinfotech.ch.
+ns1.internal.hcinfotech.ch. A	10.1.50.31
+ns2.internal.hcinfotech.ch. A	10.1.50.30
+ocsp.internal.hcinfotech.ch. CNAME ocsp.b.internal.hcinfotech.ch.
+opnsense.internal.hcinfotech.ch. CNAME opnsense.b.internal.hcinfotech.ch.
+opnsense1.internal.hcinfotech.ch. CNAME	opnsense1.b.internal.hcinfotech.ch.
+opnsense2.internal.hcinfotech.ch. CNAME	opnsense2.b.internal.hcinfotech.ch.
+prometheus.internal.hcinfotech.ch. CNAME prometheus.b.internal.hcinfotech.ch.
+prxsrv1.internal.hcinfotech.ch.	CNAME prxsrv1.b.internal.hcinfotech.ch.
+prxsrv2.internal.hcinfotech.ch.	CNAME prxsrv2.b.internal.hcinfotech.ch.
+prxsrv2-ilo.internal.hcinfotech.ch. CNAME prxsrv2-ilo.b.internal.hcinfotech.ch.
+prxsrv3.internal.hcinfotech.ch.	CNAME prxsrv3.b.internal.hcinfotech.ch.
+prxsrv3-ilo.internal.hcinfotech.ch. CNAME prxsrv3-ilo.b.internal.hcinfotech.ch.
+prxsrv4.internal.hcinfotech.ch.	CNAME prxsrv4.b.internal.hcinfotech.ch.
+prxsrv4-ilo.internal.hcinfotech.ch. CNAME prxsrv4-ilo.b.internal.hcinfotech.ch.
+testlb.internal.hcinfotech.ch. CNAME testlb.b.internal.hcinfotech.ch.

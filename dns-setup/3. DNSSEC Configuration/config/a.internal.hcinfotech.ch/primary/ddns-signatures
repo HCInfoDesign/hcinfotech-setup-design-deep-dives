@@ -1,0 +1,8 @@
+key "ddns-transfer-key" {
+	algorithm hmac-sha512;
+	secret "yRnUS+FHDp75MZAwKhd+/4f6wMZOrB5EWgW3fmQ1HWV4Ql/V5v7RRRUHyMJLEq2g9+kXVBoFf6rbwx78XCEBVw==";
+};
+key "ddns-update-key" {
+	algorithm hmac-sha512;
+	secret "AyIVLRkoryi0vqsu0r1tVNTz+KmDR+Od+UGNzfign9SbX4h7vNzKxva7TNcfcjNKTU20wiKlOsuLfjTuNU1ZYg==";
+};

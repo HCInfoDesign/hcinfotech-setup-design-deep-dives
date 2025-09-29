@@ -6,16 +6,15 @@ options {
   directory "/var/cache/bind";
 
   allow-transfer {
-    10.1.51.82;  # secondary #1
+    10.1.51.83;  # secondary #1
     key ddns-transfer-key;
   };
 
   allow-query { internal; };
-  recursion yes;
-  notify yes;
+  recursion no;
+  notify no;
 
   dnssec-validation auto;
 
   listen-on-v6 { any; };
 };
-
