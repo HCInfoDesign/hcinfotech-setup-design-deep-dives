@@ -1,0 +1,20 @@
+$TTL  86400
+$ORIGIN   50.1.10.IN-ADDR.ARPA.
+
+
+@         IN      SOA     ns1.b.internal.hcinfotech.ch  admin.internal.hcinfotech.ch. (
+                          2025091701    ; serial
+                          12h           ; refresh
+                          15m           ; retry
+                          3w            ; expire
+                          2h            ; minimum ttl
+                          )
+
+;NAME       TTL   CLASS   TYPE    Resource Record
+                  IN      NS      ns1.b.internal.hcinfotech.ch.
+                  IN      NS      ns2.b.internal.hcinfotech.ch.
+                  IN      NS      ns3.b.internal.hcinfotech.ch.
+
+84 3600 IN PTR b100dns4.b.internal.hcinfotech.ch.
+85 3600 IN PTR b100dns5.b.internal.hcinfotech.ch.
+86 3600 IN PTR b100dns6.b.internal.hcinfotech.ch.
