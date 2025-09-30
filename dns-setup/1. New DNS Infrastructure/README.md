@@ -194,7 +194,7 @@ sudo named-checkzone a.internal.hcinfotech.ch /etc/bind/a.internal.hcinfotech.ch
 6. **Start and verify named service**
 
 ```bash
-sudo systemctl start named
+sudo systemctl restart named
 systemctl status named
 sudo journalctl -eu named
 ```
