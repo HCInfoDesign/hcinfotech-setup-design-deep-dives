@@ -188,7 +188,7 @@ $ORIGIN   51.1.10.IN-ADDR.ARPA.
 
 ```bash
 sudo named-checkconf
-sudo named-checkzone a.internal.hcinfotech.ch /var/lib/bind/a.internal.hcinfotech.ch.zone
+sudo named-checkzone a.internal.hcinfotech.ch /etc/bind/a.internal.hcinfotech.ch.zone
 ```
 
 6. **Start and verify named service**
