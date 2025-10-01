@@ -101,7 +101,7 @@ allow-notify {
 };
 ```
 
-Example: [named.conf.options](./config/subdomain-dns/primary/named.conf.options)
+Example: [named.conf.options](./config/subdomain-dns/a.internal.hcinfotech.ch/primary/named.conf.options)
 
 3. **Update** /etc/bind/named.conf.local
 
@@ -119,7 +119,7 @@ zone "51.1.10.in-addr.arpa" {
 };
 ```
 
-Example: [named.conf.local](./config/subdomain-dns/primary/named.conf.local)
+Example: [named.conf.local](./config/subdomain-dns/a.internal.hcinfotech.ch/primary/named.conf.local)
 
 4. **Create** zone files for a.internal.hcinfotech.ch
 
