@@ -563,22 +563,7 @@ Example: [logrotate.d/bind](./config/sample-logrotate.d-bind)
 
 ---
 
-## 8. Verification
-
-To confirm replication works:
-
-```bash
-dig @b100udns2 tst.hcinfotech.ch AXFR
-```
-
-Use the set_HMAC alias to set the TSIG key, if the landscape uses TSIG-transfer.
-
-You should see the full zone transferred from the primary.
-Repeat with b100udns3 to verify both secondaries are in sync.
-
----
-
-## 9. Troubleshooting
+## 8. Troubleshooting
 
 | Symptom               | Likely cause                    | Fix                                 |
 | --------------------- | ------------------------------- | ----------------------------------- |

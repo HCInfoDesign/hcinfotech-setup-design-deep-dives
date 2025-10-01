@@ -1,0 +1,28 @@
+acl internal {
+  10.0.0.0/8;
+};
+
+options {
+  directory "/var/cache/bind";
+
+  allow-transfer {
+    10.1.51.85;  # secondary #1
+  };
+
+  allow-query { internal; };
+  recursion yes;
+  notify yes;
+
+  dnssec-validation auto;
+
+  listen-on-v6 { any; };
+};
+
+logging {
+  channel query_log {
+    file "/var/log/named/query.log" versions 3 size 10m;
+    severity info;
+    print-time yes;
+  };
+  category queries { query_log; };
+};

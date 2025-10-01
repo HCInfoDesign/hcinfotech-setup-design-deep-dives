@@ -1,0 +1,10 @@
+zone "b.internal.hcinfotech.ch" IN {
+  type primary;
+  file "/etc/bind/b.internal.hcinfotech.ch.zone";
+};
+
+// zone file for the reverse lookup
+zone "50.1.10.in-addr.arpa" {
+  type primary;
+  file "/etc/bind/50.1.10.in-addr.arpa.zone";
+};

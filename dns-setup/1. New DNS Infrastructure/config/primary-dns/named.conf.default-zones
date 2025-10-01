@@ -1,3 +1,4 @@
+// prime the server with knowledge of the root servers
 view "default" {
   match-clients { internal; };
   recursion yes;

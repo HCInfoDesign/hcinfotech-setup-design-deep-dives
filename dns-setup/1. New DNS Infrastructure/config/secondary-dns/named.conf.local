@@ -5,11 +5,10 @@ view "internal" {
   // Do NOT forward queries for internal clients — resolve locally
   allow-query { internal; };
   allow-transfer {
-    10.1.50.33;  # IP address of the local secondary
+    10.1.50.33;
   };
   notify yes;
 
-  // Primary zone (unchanged)
   zone "internal.hcinfotech.ch" IN {
     type secondary;
     file "/var/lib/bind/internal.hcinfotech.ch.zone";
@@ -22,6 +21,11 @@ view "internal" {
   zone "a.internal.hcinfotech.ch" IN {
     type forward;
     forwarders { 10.1.51.81; 10.1.51.82; 10.1.51.83; };
+  };
+
+  zone "b.internal.hcinfotech.ch" IN {
+    type forward;
+    forwarders { 10.1.50.84; 10.1.50.85; 10.1.50.86; };
   };
 
   // Reverse zone
@@ -44,7 +48,7 @@ view "external" {
   match-clients { any; };
   recursion yes;
   forwarders {
-    1.1.1.1;
-    1.0.0.1;
+    1.1.1.1; # Cloudflare
+    1.0.0.1; # Cloudflare secondary
   };
 };

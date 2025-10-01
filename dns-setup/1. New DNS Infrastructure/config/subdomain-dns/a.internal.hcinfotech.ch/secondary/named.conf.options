@@ -17,3 +17,12 @@ options {
 
   listen-on-v6 { any; };
 };
+
+logging {
+  channel query_log {
+    file "/var/log/named/query.log" versions 3 size 10m;
+    severity info;
+    print-time yes;
+  };
+  category queries { query_log; };
+};
