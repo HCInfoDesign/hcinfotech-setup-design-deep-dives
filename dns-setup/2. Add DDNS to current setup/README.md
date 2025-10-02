@@ -198,7 +198,7 @@ If everything checks out restart named
 sudo systemctl restart named
 ```
 
-Check stiatus and logs
+Check status and logs
 
 ```bash
 systemctl status named

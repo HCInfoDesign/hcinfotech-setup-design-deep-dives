@@ -247,7 +247,7 @@ options {
 };
 ```
 
-Example: [named.conf.options](./config/subdomain-dns/secondary/named.conf.options)
+Example: [named.conf.options](./config/subdomain-dns/a.internal.hcinfotech.ch/secondary/named.conf.options)
 
 3. **Update** /etc/bind/named.conf.local
 
@@ -272,7 +272,7 @@ zone "51.1.10.in-addr.arpa" {
 ];
 ```
 
-Example: [named.conf.local](./config/subdomain-dns/secondary/named.conf.local)
+Example: [named.conf.local](./config/subdomain-dns/a.internal.hcinfotech.ch/secondary/named.conf.local)
 
 4. **Validate and start named service**
 
