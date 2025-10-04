@@ -26,7 +26,7 @@ Store keys securely in a password manager or Vault.
 - Zone transfers → require ddns-transfer-key
 - Dynamic updates → require ddns-update-key
 
-## Example: [Primary ddns-signatures file](./config/primary-dns/ddns-signatures)
+Example: [Primary ddns-signatures file](./config/primary-dns/ddns-signatures)
 
 ## 2. Configure bind
 
