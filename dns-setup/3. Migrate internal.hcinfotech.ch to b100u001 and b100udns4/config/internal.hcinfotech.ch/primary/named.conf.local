@@ -1,0 +1,13 @@
+zone "internal.hcinfotech.ch" IN {
+  type primary;
+  file "/var/lib/bind/internal.hcinfotech.ch.zone";
+  update-policy {
+    grant ddns-update-key zonesub ANY;
+  };
+	also-notify {
+		10.1.50.32;
+		10.1.50.33;
+		10.1.50.34;
+	};
+};
+

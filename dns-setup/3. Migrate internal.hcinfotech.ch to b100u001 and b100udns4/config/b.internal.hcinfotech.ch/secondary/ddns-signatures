@@ -1,0 +1,9 @@
+key "ddns-transfer-key" {
+	algorithm hmac-sha512;
+	secret "4HvFIO56o4LjONrTIZzODmch1bsYJgEROdWA8Ek3lSKql3OZHi83sQkyvAy6RS0dkkrqLmcLgCAowkTDg2JZzA==";
+};
+server 10.1.50.84 {   # example ip of primary name server
+    keys {
+        ddns-transfer-key;
+    };
+};

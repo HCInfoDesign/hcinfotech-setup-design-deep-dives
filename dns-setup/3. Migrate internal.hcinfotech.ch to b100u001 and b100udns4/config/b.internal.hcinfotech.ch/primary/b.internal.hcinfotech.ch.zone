@@ -1,0 +1,109 @@
+$ORIGIN .
+$TTL 172800	; 2 days
+b.internal.hcinfotech.ch IN SOA	ns1.b.internal.hcinfotech.ch. admin.internal.hcinfotech.ch. (
+				2025100600 ; serial
+				43200      ; refresh (12 hours)
+				900        ; retry (15 minutes)
+				1814400    ; expire (3 weeks)
+				7200       ; minimum (2 hours)
+				)
+			NS	ns1.b.internal.hcinfotech.ch.
+			NS	ns2.b.internal.hcinfotech.ch.
+			NS	ns3.b.internal.hcinfotech.ch.
+$TTL 3600	; 1 hour
+			A	10.1.50.135
+$ORIGIN b.internal.hcinfotech.ch.
+b100caweb1		A	10.1.50.225
+b100caweb2		A	10.1.50.250
+b100caweb3		A	10.1.50.110
+b100kdc01		CNAME	b100ldap1
+b100kdc02		CNAME	b100ldap2
+b100kdc03		CNAME	b100ldap3
+b100kdc04		CNAME	b100ldap4
+b100ldap		A	10.1.50.63
+b100ldap1		A	10.1.50.43
+b100ldap2		A	10.1.50.116
+b100ldap3		A	10.1.50.40
+b100ldap4		A	10.1.50.17
+b100mail1		A	10.1.50.166
+b100mail2		A	10.1.50.35
+b100pggrf-lb		A	10.1.50.111
+b100pggrf1		A	10.1.50.111
+b100pggrf2		A	10.1.50.12
+b100pggrf3		A	10.1.50.15
+b100pggrf4		A	10.1.50.221
+b100pggrf5		A	10.1.50.237
+b100strg1		A	10.1.50.41
+b100swrep1		A	10.1.50.201
+b100swrep2		A	10.1.50.57
+b100tnas1		A	10.1.50.242
+b100tnas2		A	10.1.50.172
+b100u001		A	10.1.50.237
+b100u002		A	10.1.50.32
+b100u003		A	10.1.50.33
+b100u004		A	10.1.50.34
+b100u005		A	10.1.50.118
+b100u006		A	10.1.50.172
+b100u010		A	10.1.50.17
+b100u011		A	10.1.50.160
+b100u012		A	10.1.50.184
+b100u013		A	10.1.50.45
+b100u014		A	10.1.50.25
+b100u015		A	10.1.50.60
+b100u016		A	10.1.50.143
+b100u017		A	10.1.50.231
+b100u018		A	10.1.50.237
+b100u800		A	10.1.50.184
+b100udns4		A	10.1.50.84
+b100udns5		A	10.1.50.85
+b100udns6		A	10.1.50.86
+b100udsk		A	10.1.50.35
+b100umon1		A	10.1.50.176
+b100umon2		A	10.1.50.68
+b100umon3		A	10.1.50.108
+b100umon4		A	10.1.50.115
+b100upbs1		A	10.1.50.124
+b100upbs2		A	10.1.50.143
+b100uprt		A	10.1.50.192
+b100utmp		A	10.1.50.122
+b100utmp1		A	10.1.50.183
+b100utmp2		A	10.1.50.163
+b100utmp3		A	10.1.50.136
+bootstrap		CNAME	kubelb
+broker0			CNAME	kubelb
+broker1			CNAME	kubelb
+broker2			CNAME	kubelb
+crl-server		A	10.1.50.228
+crl-server1		CNAME	b100caweb1
+crl-server2		CNAME	b100caweb2
+crl-server3		CNAME	b100caweb3
+grafana			A	10.1.50.125
+HPBF7ABB		A	10.1.50.170
+influxdb		A	10.1.50.187
+kubelb			A	10.1.50.135
+kubevip			A	10.1.50.111
+loki			A	10.1.50.149
+monitor			A	10.1.50.212
+ns1			A	10.1.50.32
+			A	10.1.50.84
+ns2			A	10.1.50.33
+			A	10.1.50.85
+ns3			A	10.1.50.34
+			A	10.1.50.86
+ocsp			A	10.1.50.132
+ocsp1			CNAME	b100caweb1
+ocsp2			CNAME	b100caweb2
+ocsp3			CNAME	b100caweb3
+opnsense		A	10.1.50.57
+opnsense1		A	10.1.50.217
+opnsense2		A	10.1.50.102
+prometheus		A	10.1.50.183
+prxsrv1			A	10.1.50.43
+prxsrv2			A	10.1.50.89
+prxsrv2-ilo		A	10.1.50.163
+prxsrv3			A	10.1.50.181
+prxsrv3-ilo		A	10.1.50.159
+prxsrv4			A	10.1.50.203
+prxsrv4-ilo		A	10.1.50.68
+testlb			A	10.1.50.63
+www			CNAME	kubelb
