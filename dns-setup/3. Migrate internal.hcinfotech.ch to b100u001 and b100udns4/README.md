@@ -17,6 +17,14 @@ This migration transitions the internal DNS infrastructure to a delegated zone s
 | b.internal.hcinfotech.ch. | Primary operational zone   | b100udns4 | b100udns5, b100udns6 |
 | 50.1.10.in-addr.arpa.     | Reverse zone               | b100udns4 | b100udns5, b100udns6 |
 
+Current topology after part 2
+
+![Part 2 Topology](../../common/images/part-1-target-internal-dns-topology.png)
+
+Target topology after part 3
+
+![Part 3 Topology](../../common/images/part-2-target-internal-dns-topology.png)
+
 **Future trust anchor:**
 
 Once DNSSEC is implemented, internal.hcinfotech.ch will become the cryptographic trust anchor for all delegated child zones.
