@@ -141,6 +141,20 @@ The DS entrie is displayed on the command line
 
   Example: [Trust anchor zonefile](./config/internal.hcinfotech.ch/trust-anchor/internal.hcinfotect.ch.zone)
 
+#### 2.4.2 Publish trust anchor to stub resolvers
+
+Stub resolvers systemd-resolved require custom trust anchors to be specified in files with named /etc/dnssec-trust-anchors.d/<filename>.postive or /etc/dnssec-trust-anchors.d/<filename>.negative
+
+The content of the files can be the public key of the trust anchor
+
+<zone> IN DSKEY ...
+
+or the DS record
+
+<zone> IN DS ...
+
+DS record is recommendet
+
 ### 2.5 Validation
 
 After everything is configured perform these tests:
