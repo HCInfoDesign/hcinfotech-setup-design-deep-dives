@@ -4,9 +4,6 @@ view "internal" {
 
   // Do NOT forward queries for internal clients — resolve locally
   allow-query { internal; };
-  allow-notify {
-    10.1.50.32;  # IP address of the local secondary
-  };
   allow-transfer {
     10.1.50.32;  # IP address of the local secondary
     key ddns-transfer-key;

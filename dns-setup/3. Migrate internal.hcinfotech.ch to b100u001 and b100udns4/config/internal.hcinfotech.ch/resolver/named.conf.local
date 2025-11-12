@@ -5,7 +5,7 @@ view "internal" {
   // Do NOT forward queries for internal clients — resolve locally
   allow-query { internal; };
   allow-transfer {
-    10.1.50.34;
+    10.1.50.32;
     key ddns-transfer-key;
   };
   notify yes;

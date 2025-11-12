@@ -64,18 +64,25 @@ sudo systemctl restart named
 Create a shell alias to load credentials without exposing them in the shell history:
 
 ```code
-alias set_HMAC='read -i "hmac-sha512 " -ep "Encrypt. Algorithm: " HMAC_ALG; \
+alias set_HMAC_upd='read -i "hmac-sha512 " -ep "Encrypt. Algorithm: " HMAC_ALG; \
 read -i "ddns-update-key " -ep "DDNS User: " HMAC_USER; \
 read -sep "DDNS Password: " HMAC_PASSWD; \
-HMAC=${HMAC_ALG}:${HMAC_USER}:${HMAC_PASSWD}'
+HMAC_upd=${HMAC_ALG}:${HMAC_USER}:${HMAC_PASSWD}'
 ```
 
-Use the exported variable $HMAC with dig and nsupdate.
+```code
+alias set_HMAC_trns='read -i "hmac-sha512 " -ep "Encrypt. Algorithm: " HMAC_ALG; \
+read -i "ddns-transfer-key " -ep "DDNS User: " HMAC_USER; \
+read -sep "DDNS Password: " HMAC_PASSWD; \
+HMAC_trns=${HMAC_ALG}:${HMAC_USER}:${HMAC_PASSWD}'
+```
+
+Use the exported variable $HMAC_trns with dig for zone transfers and $HMAC_upd with nsupdate for dynamic zone updates.
 
 Example zone transfer:
 
 ```bash
-dig @ns1.a.internal.hcinfotech.ch +noall +answer a.internal.hcinfotech.ch -y $HMAC -t AXFR \
+dig @ns1.a.internal.hcinfotech.ch +noall +answer a.internal.hcinfotech.ch -y $HMAC_trnd -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]'
 ```
 
@@ -188,8 +195,8 @@ Example: [primary named.conf.local](./config/primary-dns/named.conf.local)
 ### 5.3 Validate and restart
 
 ```bash
-sudo -u named-checkconf
-sudo -u bind named-checkzone a.internal.hcinfotech.ch a.internal.hcinfotech.ch.zone
+sudo -u bind named-checkconf
+sudo -u bind named-checkzone a.internal.hcinfotech.ch /var/lib/bind/a.internal.hcinfotech.ch.zone
 ```
 
 If everything checks out restart named
@@ -202,7 +209,13 @@ Check status and logs
 
 ```bash
 systemctl status named
+```
+
+```bash
 sudo journalctl -eu named
+```
+
+```bash
 dig @ns1.a.internal.hcinfotech.ch a.internal.hcinfotech.ch A
 ```
 
@@ -213,7 +226,7 @@ dig @ns1.a.internal.hcinfotech.ch a.internal.hcinfotech.ch A
 ### Add a record
 
 ```bash
-nsupdate -y $HMAC
+nsupdate -y $HMAC_upd
 ```
 
 ```code
@@ -232,7 +245,7 @@ dig @ns1.a.internal.hcinfotech.ch test.a.internal.hcinfotech.ch AAAA
 ### Delete a record
 
 ```bash
-nsupdate -y $HMAC
+nsupdate -y $HMAC_upd
 ```
 
 ```code
