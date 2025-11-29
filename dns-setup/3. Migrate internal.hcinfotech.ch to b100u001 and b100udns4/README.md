@@ -42,8 +42,8 @@ Once DNSSEC is implemented, internal.hcinfotech.ch will become the cryptographic
 ## ⚙️1. Validate Current Zones
 
 ```bash
-dig @10.1.50.31 internal.hcinfotech.ch -t AXFR -y $HMAC
-dig @10.1.50.84 b.internal.hcinfotech.ch -t AXFR -y $HMAC
+dig @10.1.50.31 internal.hcinfotech.ch -t AXFR -y $HMAC_trns
+dig @10.1.50.84 b.internal.hcinfotech.ch -t AXFR -y $HMAC_trns
 ```
 
 ✅ Expected: Only **SOA** and **NS** records present before migration.
@@ -55,14 +55,14 @@ dig @10.1.50.84 b.internal.hcinfotech.ch -t AXFR -y $HMAC
 Export **A**, **CNAME**, **MX**, and **PTR** records from the legacy primary.
 
 ```bash
-dig @ns1.internal.hcinfotech.ch +noall +answer internal.hcinfotech.ch. -y $HMAC -t AXFR \
+dig @ns1.internal.hcinfotech.ch +noall +answer internal.hcinfotech.ch. -y $HMAC_trns -t AXFR \
 | grep -E $'[\t| ](A|CNAME|MX)[\t| ]' |sudo tee /etc/bind/internal.hcinfotech.ch.migration
 
-dig @ns1.internal.hcinfotech.ch +noall +answer 50.1.10.in-addr.arpa. -y $HMAC -t AXFR \
+dig @ns1.internal.hcinfotech.ch +noall +answer 50.1.10.in-addr.arpa. -y $HMAC_trns -t AXFR \
 | grep -E $'[\t| ](PTR)[\t| ]' |sudo tee /etc/bind/50.1.10.in-addr.arpa.migration
 ```
 
-NOTE: Variable $HMAC is generated using the alias from [2. Add DDNS to current setup ](../2.%20Add%20DDNS%20to%20current%20setup/README.md)
+NOTE: Variable $HMAC_trns is generated using the alias from [2. Add DDNS to current setup ](../2.%20Add%20DDNS%20to%20current%20setup/README.md)
 
 Copy these migration files to:
 
@@ -101,13 +101,13 @@ send
 Apply:
 
 ```bash
-nsupdate -y $HMAC /etc/bind/internal.hcinfotech.ch.migration
+nsupdate -y $HMAC_upd /etc/bind/internal.hcinfotech.ch.migration
 ```
 
 Validate:
 
 ```bash
-dig @10.1.50.84 b.internal.hcinfotech.ch -t AXFR -y $HMAC
+dig @10.1.50.84 b.internal.hcinfotech.ch -t AXFR -y $HMAC_trns
 ```
 
 ---
@@ -127,8 +127,8 @@ sudo nvim /etc/bind/50.1.10.in-addr.arpa.migration
 Apply and verify:
 
 ```bash
-nsupdate -y $HMAC /etc/bind/50.1.10.in-addr.arpa.migration
-dig @10.1.50.84 50.1.10.in-addr.arpa -t AXFR -y $HMAC
+nsupdate -y $HMAC_upd /etc/bind/50.1.10.in-addr.arpa.migration
+dig @10.1.50.84 50.1.10.in-addr.arpa -t AXFR -y $HMAC_trns
 ```
 
 ---
@@ -192,7 +192,7 @@ Convert old A records into CNAMEs pointing to the new delegated zone:
 Apply:
 
 ```bash
-nsupdate -y $HMAC /etc/bind/internal.hcinfotech.ch.migration
+nsupdate -y $HMAC_upd /etc/bind/internal.hcinfotech.ch.migration
 ```
 
 ---
