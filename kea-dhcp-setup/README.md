@@ -1,1 +1,1 @@
-# KEA deplovment
+# KEA deployent
