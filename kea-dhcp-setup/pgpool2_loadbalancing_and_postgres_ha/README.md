@@ -69,6 +69,12 @@ Install socat (filan - used in failover scripts)
 sudo apt update && sudo apt -y install socat
 ```
 
+## Configure pgpool2
+
+### Adjust pgpool.conf in the pgpool2 configuration directory (here /etc/pgpool2/)
+
+![pgpool.conf](./config/pgpool.conf)
+
 ### Create user pgpool in the database with role pg_monitor
 
 ```bash
