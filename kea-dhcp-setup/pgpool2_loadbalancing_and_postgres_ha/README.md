@@ -111,3 +111,22 @@ pg_enc -m -f /etc/pgpool2/pgpool.conf -u postgres -p
 sudo chown -R :postgres /etc/pgpool2
 sudo chmod o-rwx pcp.conf
 ```
+
+### Copy and adjust scripts escalation.sh, failover.sh, follow_primary.sh, pgpool_remote_start and reccovery_1st_stage. Directory: /etc/pgpool2/
+
+- ![escalation.sh](./config/escalation.sh)
+- ![failover.sh](./config/failover.sh)
+- ![follow_primary.sh](./config/follow_primary.sh)
+- ![pgpool_remote_start](./config/pgpool_remote_start)
+- ![recovery_1st_stage](./config/recovery_1st_stage)
+
+Change ownership of the scripts to user postgres and make them executable.
+
+VERY IMPORTANT: recovery_1st_stage and pgpool_remote_start need to be in the postgres data directory, so that postgres extension pgpool_recovery can find them!!!
+
+```bash
+sudo chown postgres:postgres /etc/pgpool2/*.sh /etc/pgpool2/pgpool_remote_start /etc/pgpool2/recovery_1st_stage
+sudo chmod +x /etc/pgpool2/*.sh /etc/pgpool2/pgpool_remote_start /etc/pgpool2/recovery_1st_stage
+```
+
+Copy script recovery_1st_stage and pgpool_remote_start into the postgres data directory. (/var/lib/postgresql/18/main/)
